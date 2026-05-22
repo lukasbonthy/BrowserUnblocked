@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chromium Cloud Portal</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <div class="glow glow-a"></div>
+  <div class="glow glow-b"></div>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Chromium Cloud Portal home">
+        <span class="brand-mark">C</span>
+        <span>
+          <strong>Chromium Cloud</strong>
+          <small>noVNC Render v1</small>
+        </span>
+      </a>
+
+      <form id="navForm" class="omnibox" autocomplete="off">
+        <button class="icon-btn" type="button" data-action="back" title="Back">←</button>
+        <button class="icon-btn" type="button" data-action="forward" title="Forward">→</button>
+        <button class="icon-btn" type="button" data-action="reload" title="Reload">↻</button>
+        <input id="urlInput" type="text" inputmode="url" placeholder="Search or enter a web address" spellcheck="false" />
+        <button class="go-btn" type="submit">Go</button>
+      </form>
+
+      <div class="actions">
+        <button class="pill-btn" type="button" data-action="newtab">New tab</button>
+        <button class="pill-btn" type="button" data-action="home">Home</button>
+        <button class="pill-btn ghost" type="button" data-action="fullscreen">Fullscreen</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <section id="hero" class="hero-card">
+        <div class="hero-copy">
+          <p class="eyebrow">Browser streaming portal</p>
+          <h1>Premium Chromium in your browser, no downloads.</h1>
+          <p class="subtext">This v1 boots Chromium inside a virtual display, shares it through noVNC, and wraps it in a clean web portal ready for Render Docker deploys.</p>
+          <div class="hero-row">
+            <button id="launchBtn" class="primary-btn" type="button">Launch Chromium</button>
+            <span id="status" class="status">Checking session…</span>
+          </div>
+        </div>
+        <div class="spec-card">
+          <span>Stack</span>
+          <strong>Xvfb + Chromium + x11vnc + websockify</strong>
+          <p>Protected by a portal password when PORTAL_PASSWORD is set.</p>
+        </div>
+      </section>
+
+      <section id="browserWrap" class="browser-wrap hidden">
+        <div class="browser-toolbar">
+          <div class="traffic">
+            <span></span><span></span><span></span>
+          </div>
+          <div id="connectionText" class="connection-text">Connecting to noVNC…</div>
+          <button id="reconnectBtn" class="mini-btn" type="button">Reconnect</button>
+        </div>
+        <iframe id="vncFrame" class="vnc-frame" title="Cloud Chromium noVNC session" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
+      </section>
+    </main>
+  </div>
+
+  <div id="loginOverlay" class="login-overlay hidden">
+    <form id="loginForm" class="login-card">
+      <div class="lock">⌁</div>
+      <h2>Portal locked</h2>
+      <p>Enter the Render portal password to reveal the private noVNC session.</p>
+      <input id="passwordInput" type="password" placeholder="Portal password" autocomplete="current-password" />
+      <button class="primary-btn full" type="submit">Unlock</button>
+      <span id="loginError" class="error"></span>
+    </form>
+  </div>
+
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>
