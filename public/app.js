@@ -21,17 +21,10 @@ function showLogin(show) {
 function noVncUrl() {
   const vnc = state.config?.vnc;
   if (!vnc) return '';
-  const params = new URLSearchParams({
-    autoconnect: '1',
-    reconnect: '1',
-    resize: vnc.resize || 'scale',
-    host: window.location.hostname,
-    port: window.location.port || (window.location.protocol === 'https:' ? '443' : '80'),
-    encrypt: window.location.protocol === 'https:' ? '1' : '0',
-    path: vnc.path || 'websockify',
-    password: vnc.password || ''
-  });
-  return `/novnc/vnc.html?${params.toString()}`;
+
+  // Use our own lightweight viewer instead of noVNC's full vnc.html UI.
+  // This avoids Render/noVNC query-string weirdness and the harmless package.json 404.
+  return `/assets/viewer.html?t=${Date.now()}`;
 }
 
 async function api(path, options = {}) {
@@ -71,7 +64,7 @@ function launch() {
   $('#hero').classList.add('hidden');
   $('#browserWrap').classList.remove('hidden');
   $('#vncFrame').src = src;
-  $('#connectionText').textContent = 'Connected through noVNC';
+  $('#connectionText').textContent = 'Connecting through noVNC…';
   state.launched = true;
 }
 
@@ -105,8 +98,7 @@ async function handleNavigate(event) {
 $('#launchBtn').addEventListener('click', launch);
 $('#reconnectBtn').addEventListener('click', () => {
   $('#connectionText').textContent = 'Reconnecting…';
-  $('#vncFrame').src = noVncUrl() + `&t=${Date.now()}`;
-  setTimeout(() => { $('#connectionText').textContent = 'Connected through noVNC'; }, 700);
+  $('#vncFrame').src = noVncUrl();
 });
 $('#navForm').addEventListener('submit', handleNavigate);
 
@@ -132,6 +124,15 @@ $('#loginForm').addEventListener('submit', async (event) => {
     await loadConfig();
   } catch (err) {
     $('#loginError').textContent = err.message;
+  }
+});
+
+window.addEventListener('message', (event) => {
+  if (event.origin !== window.location.origin) return;
+  const data = event.data || {};
+  if (data.type === 'vnc-status') {
+    $('#connectionText').textContent = data.text || 'noVNC';
+    if (data.mood) setStatus(data.text || 'Ready', data.mood);
   }
 });
 
