@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: chromium-novnc-portal-v1
+    env: docker
+    plan: starter
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: PORTAL_PASSWORD
+        generateValue: true
+      - key: VNC_PASSWORD
+        generateValue: true
+      - key: CHROME_HOME
+        value: https://www.google.com
+      - key: RESOLUTION
+        value: 1440x900x24
