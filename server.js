@@ -285,6 +285,30 @@ const noVncProxy = createProxyMiddleware({
 
 app.use('/websockify', noVncProxy);
 
+
+
+app.get('/api/debug', requireAuth, async (req, res) => {
+  try {
+    const fs = require('fs');
+    const read = (file) => {
+      try { return fs.readFileSync(file, 'utf8').slice(-4000); }
+      catch { return ''; }
+    };
+    const processes = await runShell("ps aux | grep -E 'Xvfb|openbox|x11vnc|websockify|chromium' | grep -v grep || true", 3000);
+    res.type('text/plain').send([
+      '=== processes ===',
+      processes,
+      '=== xvfb.log ===', read('/tmp/xvfb.log'),
+      '=== x11vnc.log ===', read('/tmp/x11vnc.log') || read('/tmp/x11vnc.stdout.log'),
+      '=== websockify.log ===', read('/tmp/websockify.log'),
+      '=== chromium.log ===', read('/tmp/chromium.log'),
+      '=== openbox.log ===', read('/tmp/openbox.log')
+    ].join('\n'));
+  } catch (err) {
+    res.status(500).type('text/plain').send(err.message || String(err));
+  }
+});
+
 app.use((req, res) => {
   res.status(404).json({ ok: false, error: 'Not found.' });
 });

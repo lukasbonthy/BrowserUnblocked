@@ -16,7 +16,7 @@ if [[ -z "${VNC_PASSWORD:-}" ]]; then
   VNC_PASSWORD="$(node -e "console.log(require('crypto').randomBytes(12).toString('base64url'))")"
 fi
 
-mkdir -p "$HOME/Downloads" "$HOME/.config/chromium" "$HOME/.cache" /tmp/chromium-profile /tmp/.X11-unix
+mkdir -p "$HOME/Downloads" "$HOME/.config/chromium" "$HOME/.cache" /tmp/chromium-profile
 chmod 700 /tmp/chromium-profile || true
 
 IFS='x' read -r WIDTH HEIGHT DEPTH <<< "$RESOLUTION"
@@ -30,39 +30,42 @@ cleanup() {
 trap cleanup EXIT SIGINT SIGTERM
 
 echo "Starting Xvfb on ${DISPLAY} at ${WIDTH}x${HEIGHT}x${DEPTH}..."
-Xvfb "$DISPLAY" -screen 0 "${WIDTH}x${HEIGHT}x${DEPTH}" -ac +extension RANDR -nolisten tcp &
+Xvfb "$DISPLAY" -screen 0 "${WIDTH}x${HEIGHT}x${DEPTH}" -ac +extension RANDR -nolisten tcp >/tmp/xvfb.log 2>&1 &
 
-sleep 1
+sleep 2
 
 echo "Starting Openbox window manager..."
 openbox-session >/tmp/openbox.log 2>&1 &
 
-sleep 1
+sleep 2
 
 echo "Starting x11vnc on localhost:${VNC_PORT}..."
 x11vnc \
   -display "$DISPLAY" \
   -rfbport "$VNC_PORT" \
-  -localhost \
+  -listen 127.0.0.1 \
   -forever \
   -shared \
   -noxdamage \
   -repeat \
   -passwd "$VNC_PASSWORD" \
-  -quiet >/tmp/x11vnc.log 2>&1 &
+  -o /tmp/x11vnc.log >/tmp/x11vnc.stdout.log 2>&1 &
 
-sleep 1
+sleep 2
 
 echo "Starting websockify on localhost:${NOVNC_PORT}..."
-websockify "127.0.0.1:${NOVNC_PORT}" "127.0.0.1:${VNC_PORT}" >/tmp/websockify.log 2>&1 &
+websockify --verbose "127.0.0.1:${NOVNC_PORT}" "127.0.0.1:${VNC_PORT}" >/tmp/websockify.log 2>&1 &
 
-sleep 1
+sleep 2
 
 echo "Starting portal server on :${PORT}..."
 node /app/server.js &
 NODE_PID=$!
 
 sleep 2
+
+echo "Runtime check:"
+(ps aux | grep -E "Xvfb|openbox|x11vnc|websockify" | grep -v grep || true)
 
 echo "Launching Chromium..."
 (

@@ -25,6 +25,9 @@ function noVncUrl() {
     autoconnect: '1',
     reconnect: '1',
     resize: vnc.resize || 'scale',
+    host: window.location.hostname,
+    port: window.location.port || (window.location.protocol === 'https:' ? '443' : '80'),
+    encrypt: window.location.protocol === 'https:' ? '1' : '0',
     path: vnc.path || 'websockify',
     password: vnc.password || ''
   });

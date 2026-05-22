@@ -51,11 +51,11 @@ RESOLUTION=1440x900x24
 ## Local Docker test
 
 ```bash
-docker build -t chromium-novnc-portal-v1 .
+docker build -t chromium-novnc-portal-v1.1 .
 docker run --rm -p 10000:10000 \
   -e PORTAL_PASSWORD=test \
   -e VNC_PASSWORD=testvnc \
-  chromium-novnc-portal-v1
+  chromium-novnc-portal-v1.1
 ```
 
 Then open:
@@ -92,3 +92,8 @@ For public use, add stronger isolation:
 ├── public/style.css
 └── public/app.js
 ```
+
+
+## v1.1 fix
+
+This build forces noVNC to use secure WebSockets on Render HTTPS and adds `/api/debug` after login for checking Xvfb/x11vnc/websockify/Chromium logs.
