@@ -6,8 +6,10 @@ services:
     autoDeploy: true
     healthCheckPath: /
     envVars:
-      - key: NO_VNC_PORT
+      - key: PORT
         value: 10000
+      - key: NO_VNC_PORT
+        value: 6901
       - key: VNC_PORT
         value: 5901
       - key: VNC_RESOLUTION
