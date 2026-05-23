@@ -9,7 +9,7 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const helmet = require('helmet');
-const { WebSocketServer } = require('ws');
+const { WebSocketServer, WebSocket } = require('ws');
 
 const app = express();
 const PORT = Number(process.env.PORT || 10000);
@@ -22,6 +22,8 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
 
 let wsClients = 0;
 let lastWsEvent = 'none yet';
+let bytesToViewer = 0;
+let bytesToVnc = 0;
 
 app.set('trust proxy', 1);
 app.use(compression());
@@ -38,26 +40,14 @@ app.use(session({
   cookie: { httpOnly: true, sameSite: 'lax', secure: 'auto', maxAge: 8 * 60 * 60 * 1000 }
 }));
 
-function isAuthed(req) {
-  return !PORTAL_PASSWORD || Boolean(req.session && req.session.authed === true);
-}
-
-function requireAuth(req, res, next) {
-  if (isAuthed(req)) return next();
-  res.status(401).json({ ok: false, error: 'Login required.' });
-}
-
-function safeCompare(a, b) {
-  const aa = Buffer.from(String(a || ''));
-  const bb = Buffer.from(String(b || ''));
-  return aa.length === bb.length && crypto.timingSafeEqual(aa, bb);
-}
+function isAuthed(req) { return !PORTAL_PASSWORD || Boolean(req.session && req.session.authed === true); }
+function requireAuth(req, res, next) { if (isAuthed(req)) return next(); res.status(401).json({ ok: false, error: 'Login required.' }); }
+function safeCompare(a, b) { const aa = Buffer.from(String(a || '')); const bb = Buffer.from(String(b || '')); return aa.length === bb.length && crypto.timingSafeEqual(aa, bb); }
 
 function runXd(args, ms = 7000) {
   return new Promise((resolve, reject) => {
     execFile('xdotool', args, { timeout: ms, env: { ...process.env, DISPLAY: process.env.DISPLAY || ':99' } }, (err, stdout, stderr) => {
-      if (err) reject(new Error(`${err.message}${stderr ? `\n${stderr}` : ''}`));
-      else resolve(stdout);
+      if (err) reject(new Error(`${err.message}${stderr ? `\n${stderr}` : ''}`)); else resolve(stdout);
     });
   });
 }
@@ -65,8 +55,7 @@ function runXd(args, ms = 7000) {
 function runShell(command, ms = 7000) {
   return new Promise((resolve, reject) => {
     execFile('bash', ['-lc', command], { timeout: ms, env: { ...process.env, DISPLAY: process.env.DISPLAY || ':99' } }, (err, stdout, stderr) => {
-      if (err) reject(new Error(`${err.message}${stderr ? `\n${stderr}` : ''}`));
-      else resolve(stdout);
+      if (err) reject(new Error(`${err.message}${stderr ? `\n${stderr}` : ''}`)); else resolve(stdout);
     });
   });
 }
@@ -101,53 +90,17 @@ async function navigate(url) {
 
 async function browserAction(action) {
   await focusChromium();
-  const map = {
-    back: ['key', '--clearmodifiers', 'Alt_L+Left'],
-    forward: ['key', '--clearmodifiers', 'Alt_L+Right'],
-    reload: ['key', '--clearmodifiers', 'ctrl+r'],
-    newtab: ['key', '--clearmodifiers', 'ctrl+t'],
-    fullscreen: ['key', '--clearmodifiers', 'F11']
-  };
+  const map = { back: ['key', '--clearmodifiers', 'Alt_L+Left'], forward: ['key', '--clearmodifiers', 'Alt_L+Right'], reload: ['key', '--clearmodifiers', 'ctrl+r'], newtab: ['key', '--clearmodifiers', 'ctrl+t'], fullscreen: ['key', '--clearmodifiers', 'F11'] };
   if (!map[action]) throw new Error('Unknown action.');
   await runXd(map[action]);
 }
 
-app.get('/health', (req, res) => res.json({ ok: true, service: 'chromium-novnc-render-v1.5-binary' }));
+app.get('/health', (req, res) => res.json({ ok: true, service: 'chromium-novnc-render-v1.6-bridge' }));
 app.get('/proxy.pac', (req, res) => res.type('application/x-ns-proxy-autoconfig').send('function FindProxyForURL(url, host) { return "DIRECT"; }'));
-
-app.get('/api/config', (req, res) => {
-  const authed = isAuthed(req);
-  res.json({ ok: true, requiresLogin: Boolean(PORTAL_PASSWORD), authenticated: authed, chromeHome: CHROME_HOME, vnc: authed ? { password: VNC_PASSWORD, path: 'websockify', resize: 'scale' } : null });
-});
-
-app.post('/api/login', (req, res) => {
-  if (!PORTAL_PASSWORD || safeCompare(req.body.password, PORTAL_PASSWORD)) {
-    req.session.authed = true;
-    return res.json({ ok: true });
-  }
-  res.status(401).json({ ok: false, error: 'Wrong portal password.' });
-});
-
-app.post('/api/browser/navigate', requireAuth, async (req, res) => {
-  try {
-    const url = normalizeUrl(req.body.url);
-    await navigate(url);
-    res.json({ ok: true, url });
-  } catch (err) {
-    res.status(400).json({ ok: false, error: err.message });
-  }
-});
-
-app.post('/api/browser/action', requireAuth, async (req, res) => {
-  try {
-    const action = String(req.body.action || '').toLowerCase();
-    if (action === 'home') await navigate(normalizeUrl(CHROME_HOME));
-    else await browserAction(action);
-    res.json({ ok: true, action });
-  } catch (err) {
-    res.status(400).json({ ok: false, error: err.message });
-  }
-});
+app.get('/api/config', (req, res) => { const authed = isAuthed(req); res.json({ ok: true, requiresLogin: Boolean(PORTAL_PASSWORD), authenticated: authed, chromeHome: CHROME_HOME, vnc: authed ? { password: VNC_PASSWORD, path: 'websockify', resize: 'scale' } : null }); });
+app.post('/api/login', (req, res) => { if (!PORTAL_PASSWORD || safeCompare(req.body.password, PORTAL_PASSWORD)) { req.session.authed = true; return res.json({ ok: true }); } res.status(401).json({ ok: false, error: 'Wrong portal password.' }); });
+app.post('/api/browser/navigate', requireAuth, async (req, res) => { try { const url = normalizeUrl(req.body.url); await navigate(url); res.json({ ok: true, url }); } catch (err) { res.status(400).json({ ok: false, error: err.message }); } });
+app.post('/api/browser/action', requireAuth, async (req, res) => { try { const action = String(req.body.action || '').toLowerCase(); if (action === 'home') await navigate(normalizeUrl(CHROME_HOME)); else await browserAction(action); res.json({ ok: true, action }); } catch (err) { res.status(400).json({ ok: false, error: err.message }); } });
 
 app.use('/assets', express.static(path.join(__dirname, 'public'), { maxAge: '0s', etag: false }));
 app.use('/novnc', requireAuth, express.static(NOVNC_WEB, { maxAge: '0s', etag: false }));
@@ -158,25 +111,11 @@ app.get('/api/debug', requireAuth, async (req, res) => {
   const read = (file) => { try { return fs.readFileSync(file, 'utf8').slice(-5000); } catch { return ''; } };
   const processes = await runShell("ps aux | grep -E 'Xvfb|openbox|x11vnc|websockify|chromium|node' | grep -v grep || true", 3000).catch(err => err.message);
   const windows = await runShell("xdotool search --onlyvisible --name . getwindowname %@ 2>/dev/null || true", 3000).catch(err => err.message);
-  res.type('text/plain').send([
-    '=== build ===', 'server-render v1.5 binary subprotocol', `ws clients: ${wsClients}`, `last ws event: ${lastWsEvent}`,
-    '=== processes ===', processes,
-    '=== visible windows ===', windows,
-    '=== x11vnc.log ===', read('/tmp/x11vnc.log') || read('/tmp/x11vnc.stdout.log'),
-    '=== chromium.log ===', read('/tmp/chromium.log'),
-    '=== websockify.log ===', read('/tmp/websockify.log')
-  ].join('\n'));
+  res.type('text/plain').send(['=== build ===', 'server-render v1.6 bridge', `ws clients: ${wsClients}`, `last ws event: ${lastWsEvent}`, `bytes to viewer: ${bytesToViewer}`, `bytes to vnc: ${bytesToVnc}`, '=== processes ===', processes, '=== visible windows ===', windows, '=== x11vnc.log ===', read('/tmp/x11vnc.log') || read('/tmp/x11vnc.stdout.log'), '=== chromium.log ===', read('/tmp/chromium.log'), '=== websockify.log ===', read('/tmp/websockify.log')].join('\n'));
 });
 
 const server = app.listen(PORT, () => console.log(`Portal listening on :${PORT}`));
-const wss = new WebSocketServer({
-  noServer: true,
-  handleProtocols: (protocols) => {
-    if (protocols && protocols.has && protocols.has('binary')) return 'binary';
-    if (protocols && protocols.has && protocols.has('base64')) return 'base64';
-    return false;
-  }
-});
+const wss = new WebSocketServer({ noServer: true, perMessageDeflate: false });
 
 wss.on('connection', (ws) => {
   wsClients += 1;
@@ -186,16 +125,16 @@ wss.on('connection', (ws) => {
   let ready = false;
 
   vnc.on('connect', () => { ready = true; lastWsEvent = `vnc tcp connected protocol=${ws.protocol || 'none'} ${new Date().toISOString()}`; while (queue.length) vnc.write(queue.shift()); });
-  vnc.on('data', chunk => { if (ws.readyState === 1) ws.send(chunk); });
+  vnc.on('data', chunk => { bytesToViewer += chunk.length; if (ws.readyState === WebSocket.OPEN) ws.send(chunk, { binary: true }); });
   vnc.on('error', err => { lastWsEvent = `vnc error ${err.message}`; try { ws.close(); } catch {} });
   vnc.on('close', () => { try { ws.close(); } catch {} });
-  ws.on('message', data => { const chunk = Buffer.isBuffer(data) ? data : Buffer.from(data); if (ready) vnc.write(chunk); else queue.push(chunk); });
+  ws.on('message', data => { const chunk = Buffer.isBuffer(data) ? data : Buffer.from(data); bytesToVnc += chunk.length; if (ready) vnc.write(chunk); else queue.push(chunk); });
   ws.on('close', () => { wsClients = Math.max(0, wsClients - 1); vnc.destroy(); });
   ws.on('error', () => vnc.destroy());
 });
 
 server.on('upgrade', (req, socket, head) => {
-  const url = new URL(req.url || '/', 'http://127.0.0.1');
+  const url = new URL(req.url || '/', 'http://localhost');
   if (url.pathname !== '/websockify') return socket.destroy();
   wss.handleUpgrade(req, socket, head, ws => wss.emit('connection', ws, req));
 });
