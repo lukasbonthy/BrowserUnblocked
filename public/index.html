@@ -9,40 +9,46 @@
     tailwind.config = {
       theme: {
         extend: {
-          colors: {
-            ink: '#07111f',
-            cloud: '#f7fbff',
-            skybrand: '#3bd5ff',
-            violetbrand: '#8b5cf6'
-          },
-          boxShadow: {
-            glow: '0 30px 110px rgba(59, 213, 255, .25)',
-            browser: '0 36px 120px rgba(7, 17, 31, .22)'
-          }
+          colors: { ink: '#07111f', cloud: '#f7fbff', skybrand: '#3bd5ff', violetbrand: '#8b5cf6' },
+          boxShadow: { glow: '0 30px 110px rgba(59, 213, 255, .25)', browser: '0 36px 120px rgba(7, 17, 31, .22)' }
         }
       }
     }
   </script>
-  <link rel="stylesheet" href="/assets/style.css?v=inputfix3" />
+  <link rel="stylesheet" href="/assets/style.css?v=urlbar1" />
 </head>
 <body class="min-h-screen overflow-x-hidden bg-[#eef7ff] text-ink selection:bg-sky-200 selection:text-ink">
   <div class="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_15%_10%,rgba(59,213,255,.36),transparent_28%),radial-gradient(circle_at_86%_16%,rgba(139,92,246,.26),transparent_30%),linear-gradient(180deg,#f8fdff,#eef7ff_46%,#eaf4ff)]"></div>
   <div class="pointer-events-none fixed inset-0 -z-10 opacity-[.38] [background-image:linear-gradient(rgba(7,17,31,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(7,17,31,.06)_1px,transparent_1px)] [background-size:46px_46px]"></div>
 
-  <header class="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 md:px-8">
-    <a class="flex items-center gap-3" href="/">
-      <span class="grid h-11 w-11 place-items-center rounded-2xl bg-ink text-sm font-black text-white shadow-lg shadow-slate-900/15">BU</span>
-      <span class="leading-tight"><b class="block text-lg tracking-[-.03em]">BrowserUnblocked</b><small id="topSub" class="text-sm font-medium text-slate-500">Disposable cloud browser</small></span>
-    </a>
-    <nav class="hidden items-center gap-2 rounded-full border border-slate-200/80 bg-white/70 p-1 shadow-sm backdrop-blur md:flex">
-      <a class="rounded-full px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100" href="#features">Features</a>
-      <button id="logout" class="hidden rounded-full bg-ink px-4 py-2 text-sm font-black text-white" type="button">Logout</button>
-      <span id="status" class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700">Starting…</span>
-    </nav>
+  <header class="sticky top-0 z-40 border-b border-white/70 bg-[#eef7ff]/82 backdrop-blur-xl">
+    <div class="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 md:px-8">
+      <div class="flex items-center justify-between gap-3">
+        <a class="flex min-w-0 items-center gap-3" href="/">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-ink text-sm font-black text-white shadow-lg shadow-slate-900/15">BU</span>
+          <span class="min-w-0 leading-tight"><b class="block truncate text-lg tracking-[-.03em]">BrowserUnblocked</b><small id="topSub" class="block truncate text-sm font-medium text-slate-500">Disposable cloud browser</small></span>
+        </a>
+        <div class="flex items-center gap-2">
+          <button id="logout" class="hidden rounded-full bg-ink px-4 py-2 text-sm font-black text-white" type="button">Logout</button>
+          <span id="status" class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700">Starting…</span>
+        </div>
+      </div>
+
+      <form id="nav" class="grid grid-cols-[42px_42px_42px_1fr] gap-2 rounded-[1.35rem] border border-slate-200/80 bg-white/78 p-2 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+        <button class="grid h-11 place-items-center rounded-2xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-600 transition hover:bg-white" type="button" data-action="back" title="Back">←</button>
+        <button class="grid h-11 place-items-center rounded-2xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-600 transition hover:bg-white" type="button" data-action="forward" title="Forward">→</button>
+        <button class="grid h-11 place-items-center rounded-2xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-600 transition hover:bg-white" type="button" data-action="reload" title="Reload">↻</button>
+        <div class="flex h-11 min-w-0 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 focus-within:border-cyan-300 focus-within:bg-white focus-within:ring-4 focus-within:ring-cyan-100">
+          <span class="text-sm font-black text-emerald-500">●</span>
+          <input id="url" class="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-700 outline-none placeholder:text-slate-400" placeholder="Enter URL or search DuckDuckGo Lite" spellcheck="false" autocomplete="off" />
+          <button class="rounded-xl bg-ink px-4 py-2 text-sm font-black text-white" type="submit">Go</button>
+        </div>
+      </form>
+    </div>
   </header>
 
   <main class="mx-auto w-full max-w-7xl px-4 pb-8 md:px-8">
-    <section id="welcome" class="grid min-h-[calc(100vh-110px)] items-center gap-8 lg:grid-cols-[1.02fr_.98fr]">
+    <section id="welcome" class="grid min-h-[calc(100vh-165px)] items-center gap-8 lg:grid-cols-[1.02fr_.98fr]">
       <div class="py-8 lg:py-12">
         <div class="mb-7 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-white/75 px-4 py-2 text-xs font-black uppercase tracking-[.18em] text-cyan-700 shadow-sm backdrop-blur">
           <span class="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_20px_rgba(52,211,153,.9)]"></span>
@@ -52,7 +58,7 @@
           Access anything,<br><span class="bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-600 bg-clip-text text-transparent">anywhere.</span>
         </h1>
         <p class="mt-7 max-w-2xl text-lg font-medium leading-8 text-slate-600 md:text-xl">
-          A browser.lol-inspired cloud browser: launch a fresh Chromium session inside your current browser, keep risky browsing isolated, and close it when you’re done.
+          Enter any URL in the top browser bar or launch a fresh Chromium session instantly. Searches use DuckDuckGo Lite to stay faster and avoid Google CAPTCHA headaches.
         </p>
         <div class="mt-8 flex flex-wrap gap-3">
           <button id="launch" class="group rounded-2xl bg-ink px-6 py-4 text-base font-black text-white shadow-xl shadow-slate-900/15 transition hover:-translate-y-0.5 hover:shadow-2xl" type="button">
@@ -61,30 +67,30 @@
           <button id="demoScroll" class="rounded-2xl border border-slate-200 bg-white/80 px-6 py-4 text-base font-black text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white" type="button">See how it works</button>
         </div>
         <div class="mt-7 flex flex-wrap gap-2">
-          <button class="quick-pill" type="button" data-quick="https://www.google.com">Google</button>
-          <button class="quick-pill" type="button" data-quick="https://youtube.com">YouTube</button>
+          <button class="quick-pill" type="button" data-quick="https://lite.duckduckgo.com/lite/">DuckDuckGo Lite</button>
+          <button class="quick-pill" type="button" data-quick="https://wikipedia.org">Wikipedia</button>
           <button class="quick-pill" type="button" data-quick="https://github.com">GitHub</button>
-          <button class="quick-pill" type="button" data-quick="https://chat.openai.com">ChatGPT</button>
+          <button class="quick-pill" type="button" data-quick="https://news.ycombinator.com">Hacker News</button>
         </div>
       </div>
 
       <div class="relative py-6 lg:py-12">
         <div class="absolute -left-8 top-14 hidden rounded-3xl border border-white/80 bg-white/75 p-4 shadow-xl shadow-cyan-900/10 backdrop-blur-xl lg:block animate-float">
           <div class="text-xs font-black uppercase tracking-[.14em] text-slate-400">Status</div>
-          <div class="mt-1 text-lg font-black text-emerald-600">Clean Session</div>
+          <div class="mt-1 text-lg font-black text-emerald-600">URL bar restored</div>
         </div>
 
         <div class="overflow-hidden rounded-[2rem] border border-white/80 bg-white/82 shadow-browser backdrop-blur-2xl">
           <div class="flex items-center gap-2 border-b border-slate-200/80 bg-slate-100/70 px-4 py-3">
             <span class="h-3 w-3 rounded-full bg-[#ff5f57]"></span><span class="h-3 w-3 rounded-full bg-[#ffbd2e]"></span><span class="h-3 w-3 rounded-full bg-[#28c840]"></span>
             <div class="ml-3 flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-500">
-              <span class="text-emerald-500">●</span><span class="truncate">https://browserunblocked.session/new</span>
+              <span class="text-emerald-500">●</span><span class="truncate">type a URL in the bar above</span>
             </div>
           </div>
           <div class="grid gap-4 p-5 md:grid-cols-[1fr_290px]">
             <div class="rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 p-6 text-white">
-              <div class="flex items-center justify-between"><span class="rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-cyan-200">Cloud Chromium</span><span class="text-sm font-bold text-white/60">00:00</span></div>
-              <div class="mt-16 text-4xl font-black tracking-[-.06em]">Disposable browser<br>ready to launch.</div>
+              <div class="flex items-center justify-between"><span class="rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-cyan-200">Cloud Chromium</span><span class="text-sm font-bold text-white/60">ultralite</span></div>
+              <div class="mt-16 text-4xl font-black tracking-[-.06em]">Paste a URL.<br>Open remotely.</div>
               <div class="mt-6 h-2 rounded-full bg-white/10"><div class="h-2 w-2/3 rounded-full bg-gradient-to-r from-cyan-300 to-violet-400"></div></div>
             </div>
 
@@ -105,10 +111,10 @@
               <div class="grid grid-cols-3 gap-2 text-center">
                 <div class="rounded-2xl bg-slate-50 p-3"><span class="block text-[10px] font-black uppercase text-slate-400">Session</span><b id="sessionId" class="text-xs">Private</b></div>
                 <div class="rounded-2xl bg-slate-50 p-3"><span class="block text-[10px] font-black uppercase text-slate-400">Engine</span><b class="text-xs">CDP</b></div>
-                <div class="rounded-2xl bg-slate-50 p-3"><span class="block text-[10px] font-black uppercase text-slate-400">Mode</span><b class="text-xs">Clean</b></div>
+                <div class="rounded-2xl bg-slate-50 p-3"><span class="block text-[10px] font-black uppercase text-slate-400">Mode</span><b class="text-xs">Lite</b></div>
               </div>
               <button id="launch2" class="mt-4 h-12 w-full rounded-2xl bg-ink font-black text-white shadow-lg shadow-slate-900/15" type="button">Open private browser</button>
-              <p class="mt-3 text-sm font-medium leading-6 text-slate-500">Each device/incognito window gets its own isolated browser context.</p>
+              <p class="mt-3 text-sm font-medium leading-6 text-slate-500">Use the top URL bar anytime, before or after launching.</p>
             </aside>
           </div>
         </div>
@@ -116,9 +122,9 @@
     </section>
 
     <section id="features" class="grid gap-4 pb-8 md:grid-cols-3">
-      <article class="feature-card"><span>01</span><b>Immediate Isolation</b><p>Launch a clean browser session in seconds, then close it when you’re done.</p></article>
-      <article class="feature-card"><span>02</span><b>Effortless Control</b><p>Use the built-in address bar, quick links, and streamed controls like a normal browser.</p></article>
-      <article class="feature-card"><span>03</span><b>Transparent Limits</b><p>Sessions auto-close after inactivity to keep Render resources fast and predictable.</p></article>
+      <article class="feature-card"><span>01</span><b>Enter URLs</b><p>Paste a full URL or type words to search through DuckDuckGo Lite.</p></article>
+      <article class="feature-card"><span>02</span><b>Ultralite stream</b><p>Lower resolution, lower frame rate, and blocked heavy resources save Render CPU.</p></article>
+      <article class="feature-card"><span>03</span><b>Auto pause</b><p>The stream pauses when the tab is hidden and reconnects when you return.</p></article>
     </section>
 
     <section id="viewer" class="hidden overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-browser">
@@ -134,6 +140,6 @@
     </section>
   </main>
 
-  <script src="/assets/app.js?v=inputfix3" defer></script>
+  <script src="/assets/app.js?v=urlbar1" defer></script>
 </body>
 </html>
