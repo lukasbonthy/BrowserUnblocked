@@ -24,7 +24,7 @@ runtime_configuration:
 logging:
   log_writer_name: all
   log_dest: logfile
-  level: 20
+  level: 0
 
 security:
   brute_force_protection:
