@@ -4,27 +4,21 @@ services:
     env: docker
     plan: starter
     autoDeploy: true
-    healthCheckPath: /health
+    healthCheckPath: /
     envVars:
-      - key: CHROME_HOME
+      - key: NO_VNC_PORT
+        value: 10000
+      - key: VNC_PORT
+        value: 5901
+      - key: VNC_RESOLUTION
+        value: 1280x720
+      - key: MAX_FRAME_RATE
+        value: 24
+      - key: LAUNCH_URL
         value: https://lite.duckduckgo.com/lite/
-      - key: SEARCH_URL
-        value: https://lite.duckduckgo.com/lite/?q=
-      - key: VIEWPORT_WIDTH
-        value: 960
-      - key: VIEWPORT_HEIGHT
-        value: 540
-      - key: FRAME_QUALITY
-        value: 28
-      - key: FRAME_EVERY_NTH
-        value: 4
-      - key: MAX_SESSIONS
-        value: 2
-      - key: IDLE_MINUTES
-        value: 4
-      - key: EMPTY_VIEWER_SECONDS
-        value: 60
-      - key: BLOCK_RESOURCE_TYPES
-        value: image,font,media
-      - key: MAX_BUFFERED_BYTES
-        value: 650000
+      - key: VNCOPTIONS
+        value: -PreferBandwidth -DynamicQualityMin=3 -DynamicQualityMax=6 -DLP_ClipDelay=0
+      - key: APP_ARGS
+        value: "--no-first-run --no-default-browser-check --disable-sync --disable-extensions --disable-notifications --disable-background-networking --disable-features=TranslateUI,MediaRouter,AutofillServerCommunication --mute-audio"
+      - key: VNC_PW
+        generateValue: true
