@@ -8,9 +8,9 @@ desktop:
 network:
   protocol: http
   interface: 0.0.0.0
-  websocket_port: 10000
+  websocket_port: 6901
   ssl:
-    require_ssl: false
+    require_ssl: true
 
 user_session:
   idle_timeout: never
