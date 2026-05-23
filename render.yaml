@@ -9,8 +9,10 @@ services:
       - key: CHROME_HOME
         value: https://www.google.com
       - key: VIEWPORT_WIDTH
-        value: 1365
+        value: 1152
       - key: VIEWPORT_HEIGHT
-        value: 768
+        value: 648
+      - key: FRAME_QUALITY
+        value: 42
       - key: IDLE_MINUTES
-        value: 10
+        value: 6
