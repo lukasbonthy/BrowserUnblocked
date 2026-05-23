@@ -13,4 +13,4 @@ RUN chown -R pwuser:pwuser /app
 USER pwuser
 
 EXPOSE 10000
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
