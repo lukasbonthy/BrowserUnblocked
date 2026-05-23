@@ -1,7 +1,7 @@
 {
-  "name": "chromium-novnc-render-v1",
-  "version": "1.1.0",
-  "description": "Render-ready premium web portal for a noVNC-powered cloud Chromium browser.",
+  "name": "browserunblocked-cdp-render",
+  "version": "2.0.0",
+  "description": "Render-ready cloud Chromium portal using Playwright + Chrome DevTools Protocol screencasting.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -12,12 +12,11 @@
   },
   "dependencies": {
     "compression": "^1.7.4",
-    "connect-timeout": "^1.9.0",
     "cookie-parser": "^1.4.6",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
     "helmet": "^7.1.0",
-    "http-proxy-middleware": "^3.0.0",
+    "playwright": "1.60.0",
     "ws": "^8.18.0"
   }
 }
