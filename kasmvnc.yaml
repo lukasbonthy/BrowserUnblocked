@@ -1,7 +1,7 @@
 desktop:
   resolution:
-    width: 1024
-    height: 576
+    width: 960
+    height: 540
   allow_resize: false
   pixel_depth: 16
 
@@ -32,21 +32,21 @@ security:
     blacklist_timeout: 1
 
 encoding:
-  max_frame_rate: 30
+  max_frame_rate: 18
   full_frame_updates: none
   rect_encoding_mode:
-    min_quality: 4
-    max_quality: 7
+    min_quality: 3
+    max_quality: 5
     rectangle_compress_threads: auto
   video_encoding_mode:
-    jpeg_quality: 5
-    webp_quality: 5
+    jpeg_quality: 4
+    webp_quality: 4
     max_resolution:
-      width: 1024
-      height: 576
+      width: 960
+      height: 540
     enter_video_encoding_mode:
       time_threshold: 2
-      area_threshold: 30%
+      area_threshold: 35%
     exit_video_encoding_mode:
       time_threshold: 1
     logging:
