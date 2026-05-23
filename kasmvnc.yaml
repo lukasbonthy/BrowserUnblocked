@@ -1,7 +1,19 @@
+desktop:
+  resolution:
+    width: 1280
+    height: 720
+  allow_resize: true
+  pixel_depth: 24
+
 network:
   protocol: http
   interface: 0.0.0.0
   websocket_port: 10000
+  ssl:
+    require_ssl: false
+
+user_session:
+  idle_timeout: never
 
 logging:
   log_writer_name: all
@@ -9,13 +21,30 @@ logging:
   level: 30
 
 security:
-  brute_force_protection: true
+  brute_force_protection:
+    blacklist_threshold: 5
+    blacklist_timeout: 10
 
 encoding:
   max_frame_rate: 24
-  prefer_bandwidth: true
-  dynamic_quality_min: 3
-  dynamic_quality_max: 6
+  rect_encoding_mode:
+    min_quality: 3
+    max_quality: 6
+    consider_lossless_quality: 10
+  video_encoding_mode:
+    jpeg_quality: 4
+    webp_quality: 4
+    max_resolution:
+      width: 1280
+      height: 720
+    enter_video_encoding_mode:
+      time_threshold: 5
+      area_threshold: 45%
+    exit_video_encoding_mode:
+      time_threshold: 3
+  compare_framebuffer: auto
+  zrle_zlib_level: auto
+  hextile_improved_compression: true
 
 keyboard:
   remap_keys:
