@@ -36,7 +36,7 @@ echo "Starting Openbox window manager..."
 openbox-session >/tmp/openbox.log 2>&1 &
 sleep 2
 
-echo "Starting x11vnc on localhost:${VNC_PORT}..."
+echo "Starting x11vnc raw VNC on localhost:${VNC_PORT}..."
 x11vnc \
   -display "$DISPLAY" \
   -rfbport "$VNC_PORT" \
@@ -44,6 +44,7 @@ x11vnc \
   -forever \
   -shared \
   -noxdamage \
+  -nowebsocket \
   -repeat \
   -passwd "$VNC_PASSWORD" \
   -o /tmp/x11vnc.log >/tmp/x11vnc.stdout.log 2>&1 &
