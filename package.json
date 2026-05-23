@@ -1,11 +1,11 @@
 {
   "name": "browserunblocked-cdp-render",
-  "version": "2.0.0",
-  "description": "Render-ready cloud Chromium portal using Playwright + Chrome DevTools Protocol screencasting.",
-  "main": "server.js",
+  "version": "2.1.0",
+  "description": "Render-ready lightweight cloud Chromium portal using Playwright + Chrome DevTools Protocol screencasting.",
+  "main": "server-lite.js",
   "scripts": {
-    "start": "node server.js",
-    "check": "node --check server.js"
+    "start": "node server-lite.js",
+    "check": "node --check server-lite.js"
   },
   "engines": {
     "node": ">=20"
