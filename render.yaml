@@ -1,16 +1,20 @@
 services:
   - type: web
-    name: chromium-novnc-portal-v1
+    name: browserunblocked
     env: docker
     plan: starter
     autoDeploy: true
-    healthCheckPath: /health
+    healthCheckPath: /
     envVars:
-      - key: PORTAL_PASSWORD
+      - key: CUSTOM_PORT
+        value: 10000
+      - key: CUSTOM_USER
+        value: admin
+      - key: PASSWORD
         generateValue: true
-      - key: VNC_PASSWORD
-        generateValue: true
-      - key: CHROME_HOME
-        value: https://www.google.com
-      - key: RESOLUTION
-        value: 1440x900x24
+      - key: TITLE
+        value: BrowserUnblocked Chromium
+      - key: TZ
+        value: Etc/UTC
+      - key: CHROME_CLI
+        value: "https://www.google.com --no-first-run --no-default-browser-check --disable-dev-shm-usage"
