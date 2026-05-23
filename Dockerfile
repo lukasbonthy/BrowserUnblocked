@@ -1,21 +1,16 @@
-FROM lscr.io/linuxserver/chromium:latest
+FROM mcr.microsoft.com/playwright:v1.60.0-noble
 
-# Render exposes one public HTTP port. LinuxServer's Chromium image supports
-# changing its internal HTTP listener with CUSTOM_PORT, so we bind it directly
-# to Render's default web-service port instead of running our own noVNC stack.
-ENV CUSTOM_PORT=10000 \
-    PUID=1000 \
-    PGID=1000 \
-    TZ=Etc/UTC \
-    CHROME_CLI="https://www.google.com --no-first-run --no-default-browser-check --disable-dev-shm-usage" \
-    TITLE="BrowserUnblocked Chromium" \
-    DISABLE_IPV6=true \
-    START_DOCKER=false \
-    DISABLE_SUDO=true \
-    DISABLE_TERMINALS=true \
-    DISABLE_OPEN_TOOLS=true \
-    SELKIES_ENABLE_SHARING=false \
-    SELKIES_ENABLE_COLLAB=false \
-    SELKIES_ENABLE_SHARED=false
+ENV NODE_ENV=production \
+    PORT=10000 \
+    HOME=/home/pwuser \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --omit=dev
+COPY . .
+RUN chown -R pwuser:pwuser /app
+USER pwuser
 
 EXPOSE 10000
+CMD ["node", "server.js"]
