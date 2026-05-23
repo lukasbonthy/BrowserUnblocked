@@ -1,0 +1,21 @@
+network:
+  protocol: http
+  interface: 0.0.0.0
+  websocket_port: 10000
+
+logging:
+  log_writer_name: all
+  log_dest: logfile
+  level: 30
+
+security:
+  brute_force_protection: true
+
+encoding:
+  max_frame_rate: 24
+  prefer_bandwidth: true
+  dynamic_quality_min: 3
+  dynamic_quality_max: 6
+
+keyboard:
+  remap_keys:
