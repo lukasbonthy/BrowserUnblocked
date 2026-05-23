@@ -4,73 +4,83 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BrowserUnblocked</title>
-  <link rel="stylesheet" href="/assets/style.css?v=3" />
+  <link rel="stylesheet" href="/assets/style.css?v=4" />
 </head>
 <body>
-  <div class="glow a"></div><div class="glow b"></div><div class="noise"></div>
-  <main class="shell">
-    <header class="topbar">
-      <div class="brand"><span class="mark">BU</span><div><b>BrowserUnblocked</b><small id="topSub">Private cloud Chromium</small></div></div>
-      <form id="nav" class="omnibox">
-        <button type="button" data-action="back" title="Back">←</button>
-        <button type="button" data-action="forward" title="Forward">→</button>
-        <button type="button" data-action="reload" title="Reload">↻</button>
-        <input id="url" placeholder="Search or enter a URL" spellcheck="false" autocomplete="off" />
-        <button type="submit" class="go">Go</button>
-      </form>
-      <div class="rightTop"><span class="status" id="status">Starting…</span><button id="logout" class="ghostBtn hidden" type="button">Logout</button></div>
-    </header>
+  <div class="mesh mesh-a"></div><div class="mesh mesh-b"></div><div class="grid-bg"></div>
 
-    <section id="welcome" class="welcome">
-      <div class="heroCopy">
-        <p class="eyebrow">Render-safe browser streaming</p>
-        <h1>Welcome to your private cloud browser.</h1>
-        <p class="lead">Launch Chromium from the web with no downloads. Each signed-in visitor gets their own isolated Playwright browser context, so sessions don’t share cookies or page state.</p>
-        <div class="heroActions">
-          <button id="launch" class="primary" type="button">Launch my browser</button>
-          <button id="demoScroll" class="secondary" type="button">See features</button>
+  <main class="appShell">
+    <section class="browserFrame">
+      <header class="browserChrome">
+        <div class="tabsRow">
+          <div class="windowDots"><span></span><span></span><span></span></div>
+          <button class="tab active" type="button"><span class="tabIcon">🌐</span><span>BrowserUnblocked</span></button>
+          <button class="tab ghost" type="button"><span>+</span></button>
+          <div class="chromeSpacer"></div>
+          <span class="statusBadge" id="status">Starting…</span>
+          <button id="logout" class="chromeButton hidden" type="button">Logout</button>
         </div>
-      </div>
 
-      <aside id="loginPanel" class="loginPanel">
-        <div class="panelTop"><span class="miniMark">✦</span><div><b>Sign in</b><small>Start your private session</small></div></div>
-        <form id="loginForm">
-          <label>Your name</label>
-          <input id="username" type="text" placeholder="ex: Lukas" autocomplete="name" maxlength="32" />
-          <label>Access password</label>
-          <input id="password" type="password" placeholder="Portal password" autocomplete="current-password" />
-          <button class="primary full" type="submit">Enter BrowserUnblocked</button>
-          <span id="loginError"></span>
+        <form id="nav" class="addressRow">
+          <button class="navBtn" type="button" data-action="back" title="Back">←</button>
+          <button class="navBtn" type="button" data-action="forward" title="Forward">→</button>
+          <button class="navBtn" type="button" data-action="reload" title="Reload">↻</button>
+          <div class="addressBox"><span class="lockIcon">⌁</span><input id="url" placeholder="Search or enter a URL" spellcheck="false" autocomplete="off" /><button class="go" type="submit">Go</button></div>
         </form>
-        <p class="hint">Your name is just for the dashboard. The password is still controlled from Render env vars.</p>
-      </aside>
+      </header>
 
-      <aside id="sessionPanel" class="loginPanel hidden">
-        <div class="panelTop"><span class="miniMark">✓</span><div><b id="welcomeName">Welcome back</b><small id="sessionMeta">Session ready</small></div></div>
-        <div class="quickStats">
-          <div><span>Session</span><b id="sessionId">Private</b></div>
-          <div><span>Engine</span><b>CDP</b></div>
-          <div><span>Mode</span><b>Isolated</b></div>
+      <section id="welcome" class="startPage">
+        <div class="heroColumn">
+          <div class="brandBlock"><span class="brandMark">BU</span><div><b>BrowserUnblocked</b><small id="topSub">Disposable cloud browser sessions</small></div></div>
+          <p class="eyebrow">Private chromium from your browser</p>
+          <h1>Open a clean browser inside this browser.</h1>
+          <p class="lead">A browser.lol-style experience built for Render: one click opens an isolated Chromium session, streamed straight into this page without downloads, VNC popups, or desktop setup.</p>
+          <div class="heroActions"><button id="launch" class="primary" type="button">Launch cloud browser</button><button id="demoScroll" class="secondary" type="button">Why it works</button></div>
+          <div class="quickLaunch">
+            <button type="button" data-quick="https://www.google.com">Google</button>
+            <button type="button" data-quick="https://youtube.com">YouTube</button>
+            <button type="button" data-quick="https://github.com">GitHub</button>
+            <button type="button" data-quick="https://chat.openai.com">ChatGPT</button>
+          </div>
         </div>
-        <button id="launch2" class="primary full" type="button">Open private Chromium</button>
-        <p class="hint">Open in another browser or incognito window to test a separate user session.</p>
-      </aside>
-    </section>
 
-    <section id="features" class="features">
-      <article><b>Private per-user sessions</b><span>Separate browser contexts keep each visitor’s cookies and storage apart.</span></article>
-      <article><b>No VNC layer</b><span>Uses Playwright + Chrome DevTools screencast instead of noVNC/websockify.</span></article>
-      <article><b>Render ready</b><span>Built for one Docker web service with a simple health check and websocket stream.</span></article>
-    </section>
+        <aside id="loginPanel" class="sideCard">
+          <div class="cardHeader"><span class="pulse"></span><div><b>Sign in</b><small>Start your private session</small></div></div>
+          <form id="loginForm" class="loginForm">
+            <label>Your name</label>
+            <input id="username" type="text" placeholder="ex: Lukas" autocomplete="name" maxlength="32" />
+            <label>Access password</label>
+            <input id="password" type="password" placeholder="Portal password" autocomplete="current-password" />
+            <button class="primary full" type="submit">Enter BrowserUnblocked</button>
+            <span id="loginError"></span>
+          </form>
+          <p class="cardHint">The name is only for the dashboard. The access password is controlled by your Render environment variable.</p>
+        </aside>
 
-    <section id="viewer" class="viewer hidden">
-      <div class="viewerbar"><span id="title">Cloud Chromium</span><span id="viewerSession">Private session</span><button id="reconnect" type="button">Reconnect</button></div>
-      <div id="screenWrap" class="screenWrap" tabindex="0">
-        <img id="screen" alt="Cloud Chromium stream" draggable="false" />
-        <div id="overlay">Connecting…</div>
-      </div>
+        <aside id="sessionPanel" class="sideCard hidden">
+          <div class="cardHeader"><span class="pulse good"></span><div><b id="welcomeName">Welcome back</b><small id="sessionMeta">Session ready</small></div></div>
+          <div class="sessionPreview">
+            <div class="miniToolbar"><span></span><span></span><span></span><b>cloud://private</b></div>
+            <div class="miniScreen"><span>Ready</span></div>
+          </div>
+          <div class="statsGrid"><div><span>Session</span><b id="sessionId">Private</b></div><div><span>Engine</span><b>CDP</b></div><div><span>Mode</span><b>Isolated</b></div></div>
+          <button id="launch2" class="primary full" type="button">Open private Chromium</button>
+          <p class="cardHint">Use incognito or another device to test another separate user session.</p>
+        </aside>
+      </section>
+
+      <section id="features" class="featureDock">
+        <article><span>01</span><b>Immediate isolation</b><p>Each browser session starts as a clean Playwright context, keeping cookies and storage separate.</p></article>
+        <article><span>02</span><b>One-click control</b><p>The page itself acts like the browser shell: address bar, nav buttons, reconnect, and stream controls.</p></article>
+        <article><span>03</span><b>No VNC stack</b><p>The app streams Chrome DevTools screencast frames directly, avoiding the old websockify/noVNC problems.</p></article>
+      </section>
+
+      <section id="viewer" class="viewer hidden">
+        <div class="streamHeader"><div><b id="title">Cloud Chromium</b><small id="viewerSession">Private session</small></div><button id="reconnect" type="button">Reconnect</button></div>
+        <div id="screenWrap" class="screenWrap" tabindex="0"><img id="screen" alt="Cloud Chromium stream" draggable="false" /><div id="overlay">Connecting…</div></div>
+      </section>
     </section>
   </main>
-  <script src="/assets/app.js?v=3" defer></script>
+  <script src="/assets/app.js?v=4" defer></script>
 </body>
 </html>
