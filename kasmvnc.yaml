@@ -24,7 +24,7 @@ runtime_configuration:
 logging:
   log_writer_name: all
   log_dest: logfile
-  level: 10
+  level: 20
 
 security:
   brute_force_protection:
@@ -37,7 +37,6 @@ encoding:
   rect_encoding_mode:
     min_quality: 4
     max_quality: 7
-    consider_lossless_quality: 99
     rectangle_compress_threads: auto
   video_encoding_mode:
     jpeg_quality: 5
@@ -54,7 +53,7 @@ encoding:
       level: off
   compare_framebuffer: auto
   zrle_zlib_level: 1
-  hextile_improved_compression: true
+  hextile_improved_compression: false
 
 keyboard:
   remap_keys:
