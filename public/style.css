@@ -74,6 +74,25 @@ body {
   line-height: 1.6;
 }
 
+.screenWrap {
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.screenWrap img,
+.screenWrap #screen,
+#screen {
+  pointer-events: none !important;
+}
+
+#overlay.hidden {
+  display: none !important;
+}
+
+#overlay {
+  pointer-events: none !important;
+}
+
 .screenWrap:focus {
   box-shadow: inset 0 0 0 3px rgba(34, 211, 238, 0.55);
 }
