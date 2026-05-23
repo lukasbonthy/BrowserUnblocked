@@ -1,44 +1,21 @@
-FROM node:20-bookworm-slim
+FROM lscr.io/linuxserver/chromium:latest
 
-ENV NODE_ENV=production \
-    PORT=10000 \
-    DISPLAY=:99 \
-    RESOLUTION=1440x900x24 \
-    VNC_PORT=5900 \
-    NOVNC_PORT=6080 \
-    CHROME_HOME=https://www.google.com \
-    HOME=/home/browser
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium \
-    chromium-l10n \
-    ca-certificates \
-    fonts-liberation \
-    fonts-noto-color-emoji \
-    libasound2 \
-    novnc \
-    openbox \
-    python3 \
-    tini \
-    websockify \
-    x11vnc \
-    xdotool \
-    xterm \
-    xvfb \
-  && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --omit=dev
-
-COPY . .
-RUN chmod +x /app/bin/start.sh \
-  && useradd -m -d /home/browser -s /bin/bash browser \
-  && mkdir -p /home/browser/Downloads /home/browser/.config/chromium /tmp/chromium-profile \
-  && chown -R browser:browser /home/browser /tmp/chromium-profile /app
-
-USER browser
+# Render exposes one public HTTP port. LinuxServer's Chromium image supports
+# changing its internal HTTP listener with CUSTOM_PORT, so we bind it directly
+# to Render's default web-service port instead of running our own noVNC stack.
+ENV CUSTOM_PORT=10000 \
+    PUID=1000 \
+    PGID=1000 \
+    TZ=Etc/UTC \
+    CHROME_CLI="https://www.google.com --no-first-run --no-default-browser-check --disable-dev-shm-usage" \
+    TITLE="BrowserUnblocked Chromium" \
+    DISABLE_IPV6=true \
+    START_DOCKER=false \
+    DISABLE_SUDO=true \
+    DISABLE_TERMINALS=true \
+    DISABLE_OPEN_TOOLS=true \
+    SELKIES_ENABLE_SHARING=false \
+    SELKIES_ENABLE_COLLAB=false \
+    SELKIES_ENABLE_SHARED=false
 
 EXPOSE 10000
-ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["/app/bin/start.sh"]
