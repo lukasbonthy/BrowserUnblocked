@@ -1,49 +1,59 @@
 desktop:
   resolution:
-    width: 1280
-    height: 720
-  allow_resize: true
-  pixel_depth: 24
+    width: 1024
+    height: 576
+  allow_resize: false
+  pixel_depth: 16
 
 network:
   protocol: http
   interface: 0.0.0.0
   websocket_port: 6901
+  use_ipv4: true
+  use_ipv6: false
   ssl:
-    require_ssl: true
+    require_ssl: false
 
 user_session:
   idle_timeout: never
 
+runtime_configuration:
+  allow_client_to_override_kasm_server_settings: false
+  allow_override_standard_vnc_server_settings: false
+
 logging:
   log_writer_name: all
   log_dest: logfile
-  level: 30
+  level: 10
 
 security:
   brute_force_protection:
-    blacklist_threshold: 5
-    blacklist_timeout: 10
+    blacklist_threshold: 0
+    blacklist_timeout: 1
 
 encoding:
-  max_frame_rate: 24
+  max_frame_rate: 30
+  full_frame_updates: none
   rect_encoding_mode:
-    min_quality: 3
-    max_quality: 6
-    consider_lossless_quality: 10
+    min_quality: 4
+    max_quality: 7
+    consider_lossless_quality: 99
+    rectangle_compress_threads: auto
   video_encoding_mode:
-    jpeg_quality: 4
-    webp_quality: 4
+    jpeg_quality: 5
+    webp_quality: 5
     max_resolution:
-      width: 1280
-      height: 720
+      width: 1024
+      height: 576
     enter_video_encoding_mode:
-      time_threshold: 5
-      area_threshold: 45%
+      time_threshold: 2
+      area_threshold: 30%
     exit_video_encoding_mode:
-      time_threshold: 3
+      time_threshold: 1
+    logging:
+      level: off
   compare_framebuffer: auto
-  zrle_zlib_level: auto
+  zrle_zlib_level: 1
   hextile_improved_compression: true
 
 keyboard:
