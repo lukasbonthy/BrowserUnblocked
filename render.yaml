@@ -4,17 +4,13 @@ services:
     env: docker
     plan: starter
     autoDeploy: true
-    healthCheckPath: /
+    healthCheckPath: /health
     envVars:
-      - key: CUSTOM_PORT
-        value: 10000
-      - key: CUSTOM_USER
-        value: admin
-      - key: PASSWORD
-        generateValue: true
-      - key: TITLE
-        value: BrowserUnblocked Chromium
-      - key: TZ
-        value: Etc/UTC
-      - key: CHROME_CLI
-        value: "https://www.google.com --no-first-run --no-default-browser-check --disable-dev-shm-usage"
+      - key: CHROME_HOME
+        value: https://www.google.com
+      - key: VIEWPORT_WIDTH
+        value: 1365
+      - key: VIEWPORT_HEIGHT
+        value: 768
+      - key: IDLE_MINUTES
+        value: 10
