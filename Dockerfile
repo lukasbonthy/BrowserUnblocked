@@ -2,10 +2,18 @@ FROM kasmweb/chromium:1.18.0
 
 USER root
 
-# Render exposes one public HTTP port. Kasm's standalone browser image normally
-# serves KasmVNC on 6901, so we override NO_VNC_PORT to Render's default port.
-# We also disable KasmVNC's inner TLS because Render terminates HTTPS at its edge
-# and forwards plain HTTP to the container.
+# KasmVNC expects Debian's default ssl-cert files during startup. The base image
+# log shows they are missing on Render, so generate the standard local-only
+# placeholders inside the image. Render still terminates public HTTPS outside.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ssl-cert \
+    && make-ssl-cert generate-default-snakeoil --force-overwrite \
+    && chmod 640 /etc/ssl/private/ssl-cert-snakeoil.key \
+    && chmod 644 /etc/ssl/certs/ssl-cert-snakeoil.pem \
+    && chown root:ssl-cert /etc/ssl/private/ssl-cert-snakeoil.key \
+    && usermod -aG ssl-cert kasm-user \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV NO_VNC_PORT=10000 \
     VNC_PORT=5901 \
     VNC_RESOLUTION=1280x720 \
