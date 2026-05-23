@@ -112,7 +112,7 @@ async function browserAction(action) {
   await runXd(map[action]);
 }
 
-app.get('/health', (req, res) => res.json({ ok: true, service: 'chromium-novnc-render-v1.4' }));
+app.get('/health', (req, res) => res.json({ ok: true, service: 'chromium-novnc-render-v1.5-binary' }));
 app.get('/proxy.pac', (req, res) => res.type('application/x-ns-proxy-autoconfig').send('function FindProxyForURL(url, host) { return "DIRECT"; }'));
 
 app.get('/api/config', (req, res) => {
@@ -159,7 +159,7 @@ app.get('/api/debug', requireAuth, async (req, res) => {
   const processes = await runShell("ps aux | grep -E 'Xvfb|openbox|x11vnc|websockify|chromium|node' | grep -v grep || true", 3000).catch(err => err.message);
   const windows = await runShell("xdotool search --onlyvisible --name . getwindowname %@ 2>/dev/null || true", 3000).catch(err => err.message);
   res.type('text/plain').send([
-    '=== build ===', 'server-render v1.4', `ws clients: ${wsClients}`, `last ws event: ${lastWsEvent}`,
+    '=== build ===', 'server-render v1.5 binary subprotocol', `ws clients: ${wsClients}`, `last ws event: ${lastWsEvent}`,
     '=== processes ===', processes,
     '=== visible windows ===', windows,
     '=== x11vnc.log ===', read('/tmp/x11vnc.log') || read('/tmp/x11vnc.stdout.log'),
@@ -169,16 +169,23 @@ app.get('/api/debug', requireAuth, async (req, res) => {
 });
 
 const server = app.listen(PORT, () => console.log(`Portal listening on :${PORT}`));
-const wss = new WebSocketServer({ noServer: true });
+const wss = new WebSocketServer({
+  noServer: true,
+  handleProtocols: (protocols) => {
+    if (protocols && protocols.has && protocols.has('binary')) return 'binary';
+    if (protocols && protocols.has && protocols.has('base64')) return 'base64';
+    return false;
+  }
+});
 
 wss.on('connection', (ws) => {
   wsClients += 1;
-  lastWsEvent = `websocket connected ${new Date().toISOString()}`;
+  lastWsEvent = `websocket connected protocol=${ws.protocol || 'none'} ${new Date().toISOString()}`;
   const vnc = net.connect(VNC_PORT, '127.0.0.1');
   const queue = [];
   let ready = false;
 
-  vnc.on('connect', () => { ready = true; lastWsEvent = `vnc tcp connected ${new Date().toISOString()}`; while (queue.length) vnc.write(queue.shift()); });
+  vnc.on('connect', () => { ready = true; lastWsEvent = `vnc tcp connected protocol=${ws.protocol || 'none'} ${new Date().toISOString()}`; while (queue.length) vnc.write(queue.shift()); });
   vnc.on('data', chunk => { if (ws.readyState === 1) ws.send(chunk); });
   vnc.on('error', err => { lastWsEvent = `vnc error ${err.message}`; try { ws.close(); } catch {} });
   vnc.on('close', () => { try { ws.close(); } catch {} });
