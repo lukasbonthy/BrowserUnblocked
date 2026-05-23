@@ -4,83 +4,136 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BrowserUnblocked</title>
-  <link rel="stylesheet" href="/assets/style.css?v=4" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#07111f',
+            cloud: '#f7fbff',
+            skybrand: '#3bd5ff',
+            violetbrand: '#8b5cf6'
+          },
+          boxShadow: {
+            glow: '0 30px 110px rgba(59, 213, 255, .25)',
+            browser: '0 36px 120px rgba(7, 17, 31, .22)'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/assets/style.css?v=tailwind-browserlol-1" />
 </head>
-<body>
-  <div class="mesh mesh-a"></div><div class="mesh mesh-b"></div><div class="grid-bg"></div>
+<body class="min-h-screen overflow-x-hidden bg-[#eef7ff] text-ink selection:bg-sky-200 selection:text-ink">
+  <div class="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_15%_10%,rgba(59,213,255,.36),transparent_28%),radial-gradient(circle_at_86%_16%,rgba(139,92,246,.26),transparent_30%),linear-gradient(180deg,#f8fdff,#eef7ff_46%,#eaf4ff)]"></div>
+  <div class="pointer-events-none fixed inset-0 -z-10 opacity-[.38] [background-image:linear-gradient(rgba(7,17,31,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(7,17,31,.06)_1px,transparent_1px)] [background-size:46px_46px]"></div>
 
-  <main class="appShell">
-    <section class="browserFrame">
-      <header class="browserChrome">
-        <div class="tabsRow">
-          <div class="windowDots"><span></span><span></span><span></span></div>
-          <button class="tab active" type="button"><span class="tabIcon">🌐</span><span>BrowserUnblocked</span></button>
-          <button class="tab ghost" type="button"><span>+</span></button>
-          <div class="chromeSpacer"></div>
-          <span class="statusBadge" id="status">Starting…</span>
-          <button id="logout" class="chromeButton hidden" type="button">Logout</button>
+  <header class="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 md:px-8">
+    <a class="flex items-center gap-3" href="/">
+      <span class="grid h-11 w-11 place-items-center rounded-2xl bg-ink text-sm font-black text-white shadow-lg shadow-slate-900/15">BU</span>
+      <span class="leading-tight"><b class="block text-lg tracking-[-.03em]">BrowserUnblocked</b><small id="topSub" class="text-sm font-medium text-slate-500">Disposable cloud browser</small></span>
+    </a>
+    <nav class="hidden items-center gap-2 rounded-full border border-slate-200/80 bg-white/70 p-1 shadow-sm backdrop-blur md:flex">
+      <a class="rounded-full px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100" href="#features">Features</a>
+      <button id="logout" class="hidden rounded-full bg-ink px-4 py-2 text-sm font-black text-white" type="button">Logout</button>
+      <span id="status" class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700">Starting…</span>
+    </nav>
+  </header>
+
+  <main class="mx-auto w-full max-w-7xl px-4 pb-8 md:px-8">
+    <section id="welcome" class="grid min-h-[calc(100vh-110px)] items-center gap-8 lg:grid-cols-[1.02fr_.98fr]">
+      <div class="py-8 lg:py-12">
+        <div class="mb-7 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-white/75 px-4 py-2 text-xs font-black uppercase tracking-[.18em] text-cyan-700 shadow-sm backdrop-blur">
+          <span class="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_20px_rgba(52,211,153,.9)]"></span>
+          Instant isolated session
+        </div>
+        <h1 class="max-w-4xl text-6xl font-black leading-[.86] tracking-[-.085em] text-ink md:text-8xl lg:text-[7.2rem]">
+          Access anything,<br><span class="bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-600 bg-clip-text text-transparent">anywhere.</span>
+        </h1>
+        <p class="mt-7 max-w-2xl text-lg font-medium leading-8 text-slate-600 md:text-xl">
+          A browser.lol-inspired cloud browser: launch a fresh Chromium session inside your current browser, keep risky browsing isolated, and close it when you’re done.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <button id="launch" class="group rounded-2xl bg-ink px-6 py-4 text-base font-black text-white shadow-xl shadow-slate-900/15 transition hover:-translate-y-0.5 hover:shadow-2xl" type="button">
+            Quick Launch <span class="inline-block transition group-hover:translate-x-1">→</span>
+          </button>
+          <button id="demoScroll" class="rounded-2xl border border-slate-200 bg-white/80 px-6 py-4 text-base font-black text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white" type="button">See how it works</button>
+        </div>
+        <div class="mt-7 flex flex-wrap gap-2">
+          <button class="quick-pill" type="button" data-quick="https://www.google.com">Google</button>
+          <button class="quick-pill" type="button" data-quick="https://youtube.com">YouTube</button>
+          <button class="quick-pill" type="button" data-quick="https://github.com">GitHub</button>
+          <button class="quick-pill" type="button" data-quick="https://chat.openai.com">ChatGPT</button>
+        </div>
+      </div>
+
+      <div class="relative py-6 lg:py-12">
+        <div class="absolute -left-8 top-14 hidden rounded-3xl border border-white/80 bg-white/75 p-4 shadow-xl shadow-cyan-900/10 backdrop-blur-xl lg:block animate-float">
+          <div class="text-xs font-black uppercase tracking-[.14em] text-slate-400">Status</div>
+          <div class="mt-1 text-lg font-black text-emerald-600">Clean Session</div>
         </div>
 
-        <form id="nav" class="addressRow">
-          <button class="navBtn" type="button" data-action="back" title="Back">←</button>
-          <button class="navBtn" type="button" data-action="forward" title="Forward">→</button>
-          <button class="navBtn" type="button" data-action="reload" title="Reload">↻</button>
-          <div class="addressBox"><span class="lockIcon">⌁</span><input id="url" placeholder="Search or enter a URL" spellcheck="false" autocomplete="off" /><button class="go" type="submit">Go</button></div>
-        </form>
-      </header>
+        <div class="overflow-hidden rounded-[2rem] border border-white/80 bg-white/82 shadow-browser backdrop-blur-2xl">
+          <div class="flex items-center gap-2 border-b border-slate-200/80 bg-slate-100/70 px-4 py-3">
+            <span class="h-3 w-3 rounded-full bg-[#ff5f57]"></span><span class="h-3 w-3 rounded-full bg-[#ffbd2e]"></span><span class="h-3 w-3 rounded-full bg-[#28c840]"></span>
+            <div class="ml-3 flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-500">
+              <span class="text-emerald-500">●</span><span class="truncate">https://browserunblocked.session/new</span>
+            </div>
+          </div>
+          <div class="grid gap-4 p-5 md:grid-cols-[1fr_290px]">
+            <div class="rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 p-6 text-white">
+              <div class="flex items-center justify-between"><span class="rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-cyan-200">Cloud Chromium</span><span class="text-sm font-bold text-white/60">00:00</span></div>
+              <div class="mt-16 text-4xl font-black tracking-[-.06em]">Disposable browser<br>ready to launch.</div>
+              <div class="mt-6 h-2 rounded-full bg-white/10"><div class="h-2 w-2/3 rounded-full bg-gradient-to-r from-cyan-300 to-violet-400"></div></div>
+            </div>
 
-      <section id="welcome" class="startPage">
-        <div class="heroColumn">
-          <div class="brandBlock"><span class="brandMark">BU</span><div><b>BrowserUnblocked</b><small id="topSub">Disposable cloud browser sessions</small></div></div>
-          <p class="eyebrow">Private chromium from your browser</p>
-          <h1>Open a clean browser inside this browser.</h1>
-          <p class="lead">A browser.lol-style experience built for Render: one click opens an isolated Chromium session, streamed straight into this page without downloads, VNC popups, or desktop setup.</p>
-          <div class="heroActions"><button id="launch" class="primary" type="button">Launch cloud browser</button><button id="demoScroll" class="secondary" type="button">Why it works</button></div>
-          <div class="quickLaunch">
-            <button type="button" data-quick="https://www.google.com">Google</button>
-            <button type="button" data-quick="https://youtube.com">YouTube</button>
-            <button type="button" data-quick="https://github.com">GitHub</button>
-            <button type="button" data-quick="https://chat.openai.com">ChatGPT</button>
+            <aside id="loginPanel" class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div class="mb-5 flex items-center gap-3"><span class="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-50 text-cyan-600">✦</span><div><b class="block text-xl tracking-[-.04em]">Sign in</b><small class="font-semibold text-slate-400">Start your browser</small></div></div>
+              <form id="loginForm" class="space-y-3">
+                <label class="block text-xs font-black uppercase tracking-[.13em] text-slate-400">Your name</label>
+                <input id="username" class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-bold outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100" type="text" placeholder="ex: Lukas" autocomplete="name" maxlength="32" />
+                <label class="block text-xs font-black uppercase tracking-[.13em] text-slate-400">Access password</label>
+                <input id="password" class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-bold outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100" type="password" placeholder="Portal password" autocomplete="current-password" />
+                <button class="h-12 w-full rounded-2xl bg-ink font-black text-white shadow-lg shadow-slate-900/15" type="submit">Enter</button>
+                <span id="loginError" class="block min-h-5 text-sm font-bold text-rose-500"></span>
+              </form>
+            </aside>
+
+            <aside id="sessionPanel" class="hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div class="mb-4 flex items-center gap-3"><span class="grid h-11 w-11 place-items-center rounded-2xl bg-emerald-50 text-emerald-600">✓</span><div><b id="welcomeName" class="block text-xl tracking-[-.04em]">Welcome back</b><small id="sessionMeta" class="font-semibold text-slate-400">Session ready</small></div></div>
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="rounded-2xl bg-slate-50 p-3"><span class="block text-[10px] font-black uppercase text-slate-400">Session</span><b id="sessionId" class="text-xs">Private</b></div>
+                <div class="rounded-2xl bg-slate-50 p-3"><span class="block text-[10px] font-black uppercase text-slate-400">Engine</span><b class="text-xs">CDP</b></div>
+                <div class="rounded-2xl bg-slate-50 p-3"><span class="block text-[10px] font-black uppercase text-slate-400">Mode</span><b class="text-xs">Clean</b></div>
+              </div>
+              <button id="launch2" class="mt-4 h-12 w-full rounded-2xl bg-ink font-black text-white shadow-lg shadow-slate-900/15" type="button">Open private browser</button>
+              <p class="mt-3 text-sm font-medium leading-6 text-slate-500">Each device/incognito window gets its own isolated browser context.</p>
+            </aside>
           </div>
         </div>
+      </div>
+    </section>
 
-        <aside id="loginPanel" class="sideCard">
-          <div class="cardHeader"><span class="pulse"></span><div><b>Sign in</b><small>Start your private session</small></div></div>
-          <form id="loginForm" class="loginForm">
-            <label>Your name</label>
-            <input id="username" type="text" placeholder="ex: Lukas" autocomplete="name" maxlength="32" />
-            <label>Access password</label>
-            <input id="password" type="password" placeholder="Portal password" autocomplete="current-password" />
-            <button class="primary full" type="submit">Enter BrowserUnblocked</button>
-            <span id="loginError"></span>
-          </form>
-          <p class="cardHint">The name is only for the dashboard. The access password is controlled by your Render environment variable.</p>
-        </aside>
+    <section id="features" class="grid gap-4 pb-8 md:grid-cols-3">
+      <article class="feature-card"><span>01</span><b>Immediate Isolation</b><p>Launch a clean browser session in seconds, then close it when you’re done.</p></article>
+      <article class="feature-card"><span>02</span><b>Effortless Control</b><p>Use the built-in address bar, quick links, and streamed controls like a normal browser.</p></article>
+      <article class="feature-card"><span>03</span><b>Transparent Limits</b><p>Sessions auto-close after inactivity to keep Render resources fast and predictable.</p></article>
+    </section>
 
-        <aside id="sessionPanel" class="sideCard hidden">
-          <div class="cardHeader"><span class="pulse good"></span><div><b id="welcomeName">Welcome back</b><small id="sessionMeta">Session ready</small></div></div>
-          <div class="sessionPreview">
-            <div class="miniToolbar"><span></span><span></span><span></span><b>cloud://private</b></div>
-            <div class="miniScreen"><span>Ready</span></div>
-          </div>
-          <div class="statsGrid"><div><span>Session</span><b id="sessionId">Private</b></div><div><span>Engine</span><b>CDP</b></div><div><span>Mode</span><b>Isolated</b></div></div>
-          <button id="launch2" class="primary full" type="button">Open private Chromium</button>
-          <p class="cardHint">Use incognito or another device to test another separate user session.</p>
-        </aside>
-      </section>
-
-      <section id="features" class="featureDock">
-        <article><span>01</span><b>Immediate isolation</b><p>Each browser session starts as a clean Playwright context, keeping cookies and storage separate.</p></article>
-        <article><span>02</span><b>One-click control</b><p>The page itself acts like the browser shell: address bar, nav buttons, reconnect, and stream controls.</p></article>
-        <article><span>03</span><b>No VNC stack</b><p>The app streams Chrome DevTools screencast frames directly, avoiding the old websockify/noVNC problems.</p></article>
-      </section>
-
-      <section id="viewer" class="viewer hidden">
-        <div class="streamHeader"><div><b id="title">Cloud Chromium</b><small id="viewerSession">Private session</small></div><button id="reconnect" type="button">Reconnect</button></div>
-        <div id="screenWrap" class="screenWrap" tabindex="0"><img id="screen" alt="Cloud Chromium stream" draggable="false" /><div id="overlay">Connecting…</div></div>
-      </section>
+    <section id="viewer" class="hidden overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-browser">
+      <div class="flex items-center gap-3 border-b border-slate-200 bg-slate-100/80 px-4 py-3">
+        <span class="h-3 w-3 rounded-full bg-[#ff5f57]"></span><span class="h-3 w-3 rounded-full bg-[#ffbd2e]"></span><span class="h-3 w-3 rounded-full bg-[#28c840]"></span>
+        <div class="min-w-0 flex-1 rounded-full bg-white px-4 py-2"><b id="title" class="block truncate text-sm">Cloud Chromium</b><small id="viewerSession" class="block truncate text-xs font-bold text-slate-400">Private session</small></div>
+        <button id="reconnect" class="rounded-full bg-ink px-4 py-2 text-sm font-black text-white" type="button">Reconnect</button>
+      </div>
+      <div id="screenWrap" class="screenWrap relative grid h-[72vh] place-items-center bg-black outline-none" tabindex="0">
+        <img id="screen" class="h-full w-full select-none object-contain" alt="Cloud Chromium stream" draggable="false" />
+        <div id="overlay" class="absolute inset-0 grid place-items-center bg-black/80 text-xl font-black text-white">Connecting…</div>
+      </div>
     </section>
   </main>
-  <script src="/assets/app.js?v=4" defer></script>
+
+  <script src="/assets/app.js?v=tailwind-browserlol-1" defer></script>
 </body>
 </html>
