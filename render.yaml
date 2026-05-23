@@ -7,18 +7,24 @@ services:
     healthCheckPath: /health
     envVars:
       - key: CHROME_HOME
-        value: https://www.google.com
+        value: https://lite.duckduckgo.com/lite/
+      - key: SEARCH_URL
+        value: https://lite.duckduckgo.com/lite/?q=
       - key: VIEWPORT_WIDTH
-        value: 1024
+        value: 960
       - key: VIEWPORT_HEIGHT
-        value: 576
+        value: 540
       - key: FRAME_QUALITY
-        value: 34
+        value: 28
       - key: FRAME_EVERY_NTH
-        value: 3
+        value: 4
       - key: MAX_SESSIONS
-        value: 3
+        value: 2
       - key: IDLE_MINUTES
-        value: 5
+        value: 4
+      - key: EMPTY_VIEWER_SECONDS
+        value: 60
       - key: BLOCK_RESOURCE_TYPES
-        value: font,media
+        value: image,font,media
+      - key: MAX_BUFFERED_BYTES
+        value: 650000
