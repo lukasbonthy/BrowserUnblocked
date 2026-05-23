@@ -30,5 +30,5 @@ RUN chmod +x /render-start.sh
 
 EXPOSE 10000
 
-ENTRYPOINT []
-CMD ["/render-start.sh"]
+ENTRYPOINT ["/bin/bash", "/render-start.sh"]
+CMD []
