@@ -12,9 +12,12 @@ RUN apt-get update \
     && chmod 644 /etc/ssl/certs/ssl-cert-snakeoil.pem \
     && chown root:ssl-cert /etc/ssl/private/ssl-cert-snakeoil.key \
     && usermod -aG ssl-cert kasm-user \
+    && mkdir -p /home/kasm-user/.vnc \
+    && chown -R kasm-user:root /home/kasm-user/.vnc \
     && rm -rf /var/lib/apt/lists/*
 
-ENV NO_VNC_PORT=10000 \
+ENV PORT=10000 \
+    NO_VNC_PORT=10000 \
     VNC_PORT=5901 \
     VNC_RESOLUTION=1280x720 \
     MAX_FRAME_RATE=24 \
@@ -23,6 +26,7 @@ ENV NO_VNC_PORT=10000 \
     VNCOPTIONS="-PreferBandwidth -DynamicQualityMin=3 -DynamicQualityMax=6 -DLP_ClipDelay=0"
 
 COPY kasmvnc.yaml /etc/kasmvnc/kasmvnc.yaml
+COPY --chown=kasm-user:root kasmvnc.yaml /home/kasm-user/.vnc/kasmvnc.yaml
 
 EXPOSE 10000
 
