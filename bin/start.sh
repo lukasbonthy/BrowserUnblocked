@@ -54,7 +54,7 @@ websockify --verbose "127.0.0.1:${NOVNC_PORT}" "127.0.0.1:${VNC_PORT}" >/tmp/web
 sleep 2
 
 echo "Starting portal server on :${PORT}..."
-node /app/server-render.js &
+node /app/server-websockify.js &
 NODE_PID=$!
 sleep 2
 
