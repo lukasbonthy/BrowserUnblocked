@@ -12,8 +12,7 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_CACHE_HOME="$HOME/.cache"
 
 if [[ -z "${VNC_PASSWORD:-}" ]]; then
-  export VNC_PASSWORD
-  VNC_PASSWORD="$(node -e "console.log(require('crypto').randomBytes(12).toString('base64url'))")"
+  export VNC_PASSWORD="12345"
 fi
 
 mkdir -p "$HOME/Downloads" "$HOME/.config/chromium" "$HOME/.cache" /tmp/chromium-profile
@@ -31,12 +30,10 @@ trap cleanup EXIT SIGINT SIGTERM
 
 echo "Starting Xvfb on ${DISPLAY} at ${WIDTH}x${HEIGHT}x${DEPTH}..."
 Xvfb "$DISPLAY" -screen 0 "${WIDTH}x${HEIGHT}x${DEPTH}" -ac +extension RANDR -nolisten tcp >/tmp/xvfb.log 2>&1 &
-
 sleep 2
 
 echo "Starting Openbox window manager..."
 openbox-session >/tmp/openbox.log 2>&1 &
-
 sleep 2
 
 echo "Starting x11vnc on localhost:${VNC_PORT}..."
@@ -50,22 +47,16 @@ x11vnc \
   -repeat \
   -passwd "$VNC_PASSWORD" \
   -o /tmp/x11vnc.log >/tmp/x11vnc.stdout.log 2>&1 &
-
 sleep 2
 
 echo "Starting websockify on localhost:${NOVNC_PORT}..."
 websockify --verbose "127.0.0.1:${NOVNC_PORT}" "127.0.0.1:${VNC_PORT}" >/tmp/websockify.log 2>&1 &
-
 sleep 2
 
 echo "Starting portal server on :${PORT}..."
-node /app/server.js &
+node /app/server-render.js &
 NODE_PID=$!
-
 sleep 2
-
-echo "Runtime check:"
-(ps aux | grep -E "Xvfb|openbox|x11vnc|websockify" | grep -v grep || true)
 
 echo "Launching Chromium..."
 (
@@ -79,7 +70,6 @@ echo "Launching Chromium..."
       --disable-default-apps \
       --disable-extensions \
       --disable-notifications \
-      --disable-popup-blocking=false \
       --disable-features=TranslateUI,MediaRouter,AutofillServerCommunication \
       --no-first-run \
       --no-default-browser-check \
