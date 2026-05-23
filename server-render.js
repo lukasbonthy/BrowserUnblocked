@@ -112,7 +112,7 @@ async function browserAction(action) {
   await runXd(map[action]);
 }
 
-app.get('/health', (req, res) => res.json({ ok: true, service: 'chromium-novnc-render-v1.3' }));
+app.get('/health', (req, res) => res.json({ ok: true, service: 'chromium-novnc-render-v1.4' }));
 app.get('/proxy.pac', (req, res) => res.type('application/x-ns-proxy-autoconfig').send('function FindProxyForURL(url, host) { return "DIRECT"; }'));
 
 app.get('/api/config', (req, res) => {
@@ -159,7 +159,7 @@ app.get('/api/debug', requireAuth, async (req, res) => {
   const processes = await runShell("ps aux | grep -E 'Xvfb|openbox|x11vnc|websockify|chromium|node' | grep -v grep || true", 3000).catch(err => err.message);
   const windows = await runShell("xdotool search --onlyvisible --name . getwindowname %@ 2>/dev/null || true", 3000).catch(err => err.message);
   res.type('text/plain').send([
-    '=== build ===', 'server-render v1.3', `ws clients: ${wsClients}`, `last ws event: ${lastWsEvent}`,
+    '=== build ===', 'server-render v1.4', `ws clients: ${wsClients}`, `last ws event: ${lastWsEvent}`,
     '=== processes ===', processes,
     '=== visible windows ===', windows,
     '=== x11vnc.log ===', read('/tmp/x11vnc.log') || read('/tmp/x11vnc.stdout.log'),
@@ -179,7 +179,7 @@ wss.on('connection', (ws) => {
   let ready = false;
 
   vnc.on('connect', () => { ready = true; lastWsEvent = `vnc tcp connected ${new Date().toISOString()}`; while (queue.length) vnc.write(queue.shift()); });
-  vnc.on('data', chunk => { if (ws.readyState === ws.OPEN) ws.send(chunk); });
+  vnc.on('data', chunk => { if (ws.readyState === 1) ws.send(chunk); });
   vnc.on('error', err => { lastWsEvent = `vnc error ${err.message}`; try { ws.close(); } catch {} });
   vnc.on('close', () => { try { ws.close(); } catch {} });
   ws.on('message', data => { const chunk = Buffer.isBuffer(data) ? data : Buffer.from(data); if (ready) vnc.write(chunk); else queue.push(chunk); });
