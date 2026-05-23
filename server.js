@@ -10,11 +10,11 @@ const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const helmet = require('helmet');
 const timeout = require('connect-timeout');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const { WebSocketServer } = require('ws');
 
 const app = express();
 const PORT = Number(process.env.PORT || 10000);
-const NOVNC_PORT = Number(process.env.NOVNC_PORT || 6080);
+const VNC_PORT = Number(process.env.VNC_PORT || 5900);
 const VNC_PASSWORD = process.env.VNC_PASSWORD || '';
 const PORTAL_PASSWORD = process.env.PORTAL_PASSWORD || '';
 const CHROME_HOME = process.env.CHROME_HOME || 'https://www.google.com';
@@ -179,7 +179,7 @@ async function browserAction(action) {
 }
 
 app.get('/health', (req, res) => {
-  res.json({ ok: true, service: 'chromium-novnc-portal-v1' });
+  res.json({ ok: true, service: 'chromium-novnc-portal-v1.2-node-ws' });
 });
 
 app.get('/proxy.pac', (req, res) => {
@@ -275,18 +275,6 @@ app.use('/novnc', requireAuth, express.static(NOVNC_WEB, {
   etag: true
 }));
 
-const noVncProxy = createProxyMiddleware({
-  target: `http://127.0.0.1:${NOVNC_PORT}`,
-  changeOrigin: true,
-  ws: true,
-  logLevel: 'warn',
-  pathRewrite: { '^/websockify': '' }
-});
-
-app.use('/websockify', noVncProxy);
-
-
-
 app.get('/api/debug', requireAuth, async (req, res) => {
   try {
     const fs = require('fs');
@@ -294,10 +282,16 @@ app.get('/api/debug', requireAuth, async (req, res) => {
       try { return fs.readFileSync(file, 'utf8').slice(-4000); }
       catch { return ''; }
     };
-    const processes = await runShell("ps aux | grep -E 'Xvfb|openbox|x11vnc|websockify|chromium' | grep -v grep || true", 3000);
+    const processes = await runShell("ps aux | grep -E 'Xvfb|openbox|x11vnc|websockify|chromium|node' | grep -v grep || true", 3000);
+    const ports = await runShell("(ss -ltnp || netstat -ltnp || true) 2>/dev/null | grep -E ':5900|:6080|:10000' || true", 3000);
     res.type('text/plain').send([
+      '=== build ===',
+      'v1.2 node ws bridge active',
+      `vnc target: 127.0.0.1:${VNC_PORT}`,
       '=== processes ===',
       processes,
+      '=== ports ===',
+      ports,
       '=== xvfb.log ===', read('/tmp/xvfb.log'),
       '=== x11vnc.log ===', read('/tmp/x11vnc.log') || read('/tmp/x11vnc.stdout.log'),
       '=== websockify.log ===', read('/tmp/websockify.log'),
@@ -323,10 +317,63 @@ const server = app.listen(PORT, () => {
   console.log(`Chromium noVNC portal listening on :${PORT}`);
 });
 
+const wss = new WebSocketServer({ noServer: true });
+
+wss.on('connection', (ws, req) => {
+  console.log('noVNC websocket connected');
+  const vnc = net.connect(VNC_PORT, '127.0.0.1');
+  let vncReady = false;
+  const pending = [];
+
+  vnc.on('connect', () => {
+    vncReady = true;
+    while (pending.length) vnc.write(pending.shift());
+  });
+
+  vnc.on('data', (chunk) => {
+    if (ws.readyState === ws.OPEN) ws.send(chunk);
+  });
+
+  vnc.on('error', (err) => {
+    console.error('VNC tcp error:', err.message);
+    try { ws.close(1011, 'VNC TCP error'); } catch {}
+  });
+
+  vnc.on('close', () => {
+    try { ws.close(); } catch {}
+  });
+
+  ws.on('message', (data) => {
+    const chunk = Buffer.isBuffer(data) ? data : Buffer.from(data);
+    if (vncReady) vnc.write(chunk);
+    else pending.push(chunk);
+  });
+
+  ws.on('close', () => {
+    vnc.destroy();
+  });
+
+  ws.on('error', () => {
+    vnc.destroy();
+  });
+});
+
 server.on('upgrade', (req, socket, head) => {
-  if (req.url && req.url.startsWith('/websockify')) {
-    noVncProxy.upgrade(req, socket, head);
-  } else {
+  const url = new URL(req.url || '/', 'http://127.0.0.1');
+  if (url.pathname !== '/websockify') {
     socket.destroy();
+    return;
   }
+
+  // Parse the same signed session cookie for WebSocket upgrades.
+  sessionMiddleware(req, {}, () => {
+    if (!isAuthed(req)) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      wss.emit('connection', ws, req);
+    });
+  });
 });
