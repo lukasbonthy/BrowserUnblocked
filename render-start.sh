@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+echo "Starting BrowserUnblocked app controller on 127.0.0.1:${CONTROL_PORT:-7070}"
+python3 /control_server.py &
+
 echo "Starting nginx proxy on port ${PORT:-10000}"
 nginx -t
 nginx -c /etc/nginx/nginx.conf
