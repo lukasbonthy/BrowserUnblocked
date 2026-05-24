@@ -24,10 +24,11 @@ ENV PORT=10000 \
 
 COPY nginx-render.conf /etc/nginx/conf.d/default.conf
 COPY portal.html /usr/share/nginx/html/index.html
+COPY control_server.py /control_server.py
 COPY kasmvnc.yaml /etc/kasmvnc/kasmvnc.yaml
 COPY --chown=kasm-user:root kasmvnc.yaml /home/kasm-user/.vnc/kasmvnc.yaml
 COPY render-start.sh /render-start.sh
-RUN chmod +x /render-start.sh
+RUN chmod +x /render-start.sh /control_server.py
 
 EXPOSE 10000
 
