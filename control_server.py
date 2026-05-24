@@ -9,18 +9,40 @@ from urllib.parse import urlparse
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("CONTROL_PORT", "7070"))
 DISPLAY = os.environ.get("APP_DISPLAY", ":1")
+DISPLAY_NUM = DISPLAY.replace(":", "", 1)
+HOME_DIR = "/home/kasm-user"
 
 
 def shell_quote(value: str) -> str:
     return shlex.quote(value)
 
 
+def wrap_for_display(command: str) -> str:
+    # The launcher page is available before Xvnc/Chromium is always fully ready.
+    # Queue the app launch until the Kasm display socket exists, then run it.
+    return f"""
+set +e
+export DISPLAY={shell_quote(DISPLAY)}
+export HOME={shell_quote(HOME_DIR)}
+export XAUTHORITY={shell_quote(HOME_DIR)}/.Xauthority
+for i in $(seq 1 90); do
+  if [ -S /tmp/.X11-unix/X{shell_quote(DISPLAY_NUM)} ]; then
+    break
+  fi
+  sleep 1
+done
+sleep 2
+{command}
+"""
+
+
 def run_detached(command: str) -> None:
     env = os.environ.copy()
     env["DISPLAY"] = DISPLAY
-    env.setdefault("HOME", "/home/kasm-user")
+    env["HOME"] = HOME_DIR
+    env["XAUTHORITY"] = f"{HOME_DIR}/.Xauthority"
     subprocess.Popen(
-        ["bash", "-lc", command],
+        ["bash", "-lc", wrap_for_display(command)],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         stdin=subprocess.DEVNULL,
@@ -29,34 +51,37 @@ def run_detached(command: str) -> None:
     )
 
 
+def chromium_cmd(extra: str) -> str:
+    return (
+        "BROWSER=$(command -v chromium || command -v chromium-browser || command -v google-chrome || true); "
+        "if [ -z \"$BROWSER\" ]; then echo 'No chromium browser found' >&2; exit 0; fi; "
+        f"nohup \"$BROWSER\" {extra} >/tmp/browserunblocked-launcher.log 2>&1 &"
+    )
+
+
 def chromium_app(url: str, profile: str) -> str:
-    return (
-        f"mkdir -p /home/kasm-user/.browserunblocked/{shell_quote(profile)}; "
-        f"nohup chromium "
-        f"--no-first-run --no-default-browser-check --disable-sync --disable-notifications "
-        f"--disable-background-networking --mute-audio "
-        f"--user-data-dir=/home/kasm-user/.browserunblocked/{shell_quote(profile)} "
-        f"--app={shell_quote(url)} >/tmp/browserunblocked-{shell_quote(profile)}.log 2>&1 &"
+    profile_dir = f"{HOME_DIR}/.browserunblocked/{profile}"
+    args = (
+        "--no-first-run --no-default-browser-check --disable-sync --disable-notifications "
+        "--disable-background-networking --mute-audio "
+        f"--user-data-dir={shell_quote(profile_dir)} --app={shell_quote(url)}"
     )
+    return f"mkdir -p {shell_quote(profile_dir)}; {chromium_cmd(args)}"
 
 
-def normal_browser(url: str) -> str:
-    return (
-        f"nohup chromium --no-first-run --no-default-browser-check --disable-sync "
-        f"--disable-notifications --disable-background-networking --mute-audio "
-        f"--new-window {shell_quote(url)} >/tmp/browserunblocked-chromium.log 2>&1 &"
+def normal_browser(url: str, profile: str = "main") -> str:
+    profile_dir = f"{HOME_DIR}/.browserunblocked/{profile}"
+    args = (
+        "--no-first-run --no-default-browser-check --disable-sync --disable-notifications "
+        "--disable-background-networking --mute-audio "
+        f"--user-data-dir={shell_quote(profile_dir)} --new-window {shell_quote(url)}"
     )
+    return f"mkdir -p {shell_quote(profile_dir)}; {chromium_cmd(args)}"
 
 
 APPS = {
-    "chromium": {
-        "label": "Chromium",
-        "command": normal_browser("https://lite.duckduckgo.com/lite/"),
-    },
-    "chrome": {
-        "label": "Chrome-style browser",
-        "command": normal_browser("https://www.google.com/"),
-    },
+    "chromium": {"label": "Chromium", "command": normal_browser("https://lite.duckduckgo.com/lite/", "chromium")},
+    "chrome": {"label": "Chrome-style browser", "command": normal_browser("https://www.google.com/", "chrome")},
     "firefox": {
         "label": "Firefox",
         "command": (
@@ -67,26 +92,11 @@ APPS = {
             + "; fi"
         ),
     },
-    "discord": {
-        "label": "Discord",
-        "command": chromium_app("https://discord.com/app", "discord"),
-    },
-    "brave": {
-        "label": "Brave Search",
-        "command": chromium_app("https://search.brave.com/", "brave"),
-    },
-    "edge": {
-        "label": "Edge / Bing",
-        "command": chromium_app("https://www.bing.com/", "edge"),
-    },
-    "desktop": {
-        "label": "Desktop",
-        "command": "nohup xfce4-appfinder >/tmp/browserunblocked-desktop.log 2>&1 &",
-    },
-    "terminal": {
-        "label": "Terminal",
-        "command": "nohup bash -lc 'x-terminal-emulator || xfce4-terminal || xterm' >/tmp/browserunblocked-terminal.log 2>&1 &",
-    },
+    "discord": {"label": "Discord", "command": chromium_app("https://discord.com/app", "discord")},
+    "brave": {"label": "Brave Search", "command": chromium_app("https://search.brave.com/", "brave")},
+    "edge": {"label": "Edge / Bing", "command": chromium_app("https://www.bing.com/", "edge")},
+    "desktop": {"label": "Desktop", "command": "nohup bash -lc 'xfce4-appfinder || true' >/tmp/browserunblocked-desktop.log 2>&1 &"},
+    "terminal": {"label": "Terminal", "command": "nohup bash -lc 'x-terminal-emulator || xfce4-terminal || xterm || true' >/tmp/browserunblocked-terminal.log 2>&1 &"},
 }
 
 
@@ -97,15 +107,24 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
-        self.wfile.write(data)
+        if self.command != "HEAD":
+            self.wfile.write(data)
 
     def _redirect(self, target: str) -> None:
         self.send_response(302)
         self.send_header("Location", target)
+        self.send_header("Content-Length", "0")
         self.end_headers()
 
+    def do_HEAD(self) -> None:
+        self._json(200, {"ok": True})
+
     def do_GET(self) -> None:
-        path = urlparse(self.path).path.rstrip("/")
+        path = urlparse(self.path).path.rstrip("/") or "/"
+
+        if path in {"/", "/health"}:
+            self._json(200, {"ok": True, "service": "browserunblocked-control"})
+            return
 
         if path in {"/api/apps", "/apps.json"}:
             self._json(200, {"ok": True, "apps": sorted(APPS.keys())})
@@ -119,6 +138,7 @@ class Handler(BaseHTTPRequestHandler):
                 return
             try:
                 run_detached(item["command"])
+                print(f"control_server: queued app launch: {app}", flush=True)
                 if path.startswith("/open/"):
                     self._redirect("/launch")
                 else:
