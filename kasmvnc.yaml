@@ -12,7 +12,7 @@ network:
   use_ipv4: true
   use_ipv6: false
   ssl:
-    require_ssl: false
+    require_ssl: true
 
 user_session:
   idle_timeout: never
