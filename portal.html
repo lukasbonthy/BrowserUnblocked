@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BrowserUnblocked App Launcher</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #060914;
+      --card: rgba(255,255,255,.075);
+      --card2: rgba(255,255,255,.115);
+      --line: rgba(255,255,255,.14);
+      --text: #f8fbff;
+      --muted: rgba(248,251,255,.68);
+      --cyan: #3bd5ff;
+      --violet: #8b5cf6;
+      --green: #41f59b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 14% 10%, rgba(59,213,255,.26), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(139,92,246,.24), transparent 30%),
+        radial-gradient(circle at 50% 100%, rgba(65,245,155,.12), transparent 34%),
+        linear-gradient(180deg, #080d1d, var(--bg));
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, black, transparent 88%);
+    }
+    .wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 50px; position: relative; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 48px; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .logo { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 17px; color: #06101c; background: linear-gradient(135deg, var(--cyan), var(--green)); font-weight: 950; box-shadow: 0 16px 55px rgba(59,213,255,.24); }
+    .brand b { display: block; font-size: 18px; letter-spacing: -.04em; }
+    .brand span { display: block; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .status { border: 1px solid rgba(65,245,155,.22); background: rgba(65,245,155,.09); color: #a7ffd0; border-radius: 999px; padding: 10px 14px; font-size: 13px; font-weight: 900; white-space: nowrap; }
+    .hero { display: grid; gap: 26px; grid-template-columns: 1.04fr .96fr; align-items: end; margin-bottom: 24px; }
+    .eyebrow { width: fit-content; border: 1px solid rgba(59,213,255,.25); background: rgba(59,213,255,.095); color: #9cefff; border-radius: 999px; padding: 9px 12px; font-size: 12px; font-weight: 950; text-transform: uppercase; letter-spacing: .16em; }
+    h1 { margin: 18px 0 16px; max-width: 780px; font-size: clamp(48px, 8vw, 100px); line-height: .86; letter-spacing: -.085em; }
+    h1 span { background: linear-gradient(90deg, var(--cyan), #6aa5ff, var(--violet)); -webkit-background-clip: text; color: transparent; }
+    .lead { max-width: 700px; color: var(--muted); font-size: clamp(16px, 2vw, 20px); line-height: 1.65; font-weight: 650; }
+    .panel { border: 1px solid var(--line); background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.055)); border-radius: 30px; padding: 20px; box-shadow: 0 30px 90px rgba(0,0,0,.28); backdrop-filter: blur(18px); }
+    .panel h2 { margin: 0 0 8px; letter-spacing: -.045em; font-size: 26px; }
+    .panel p { margin: 0; color: var(--muted); line-height: 1.55; font-weight: 650; }
+    .apps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+    .card { min-height: 178px; display: flex; flex-direction: column; justify-content: space-between; padding: 18px; border: 1px solid var(--line); border-radius: 26px; background: var(--card); color: inherit; text-decoration: none; box-shadow: 0 20px 60px rgba(0,0,0,.22); backdrop-filter: blur(16px); transition: transform .18s ease, background .18s ease, border-color .18s ease; }
+    .card:hover { transform: translateY(-4px); background: var(--card2); border-color: rgba(59,213,255,.35); }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 18px; font-size: 24px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.1); }
+    .pill { border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.72); border-radius: 999px; padding: 7px 9px; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+    .ready { color: #a9ffd2; background: rgba(65,245,155,.09); border-color: rgba(65,245,155,.22); }
+    .soon { color: #b8c6ff; background: rgba(139,92,246,.1); border-color: rgba(139,92,246,.22); }
+    .card h3 { margin: 22px 0 8px; font-size: 25px; letter-spacing: -.055em; }
+    .card p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 14px; font-weight: 650; }
+    .launch { margin-top: 18px; color: #dff9ff; font-size: 13px; font-weight: 950; }
+    footer { margin-top: 24px; color: rgba(255,255,255,.48); font-size: 13px; font-weight: 700; text-align: center; }
+    @media (max-width: 980px) { .hero { grid-template-columns: 1fr; } .apps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .wrap { width: min(100% - 22px, 1180px); padding-top: 18px; } header { align-items: flex-start; flex-direction: column; margin-bottom: 32px; } .apps { grid-template-columns: 1fr; } .card { min-height: 150px; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <a class="brand" href="/" aria-label="BrowserUnblocked home">
+        <span class="logo">BU</span>
+        <span><b>BrowserUnblocked</b><span>Kasm app launcher</span></span>
+      </a>
+      <span class="status">● Chromium service online</span>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Cloud apps without downloads</div>
+        <h1>Pick a <span>Kasm app.</span></h1>
+        <p class="lead">Launch the current Chromium container or jump to dedicated Render services for Firefox, Discord, Brave, Edge, Desktop, and more.</p>
+      </div>
+      <aside class="panel">
+        <h2>How this works</h2>
+        <p>This page is the launcher. Chromium opens on this service. The other cards are ready for matching Render services/subdomains that use the same KasmVNC wrapper with a different official Kasm image.</p>
+      </aside>
+    </section>
+
+    <section class="apps" aria-label="Kasm app options">
+      <a class="card" href="/launch">
+        <div class="top"><span class="icon">🌐</span><span class="pill ready">Live here</span></div>
+        <div><h3>Chromium</h3><p>The current low-resource browser container running on this Render service.</p><div class="launch">Launch Chromium →</div></div>
+      </a>
+      <a class="card" href="https://chrome-browserunblocked.onrender.com">
+        <div class="top"><span class="icon">🔵</span><span class="pill soon">Service link</span></div>
+        <div><h3>Chrome</h3><p>Google Chrome Kasm image service slot.</p><div class="launch">Open Chrome service →</div></div>
+      </a>
+      <a class="card" href="https://firefox-browserunblocked.onrender.com">
+        <div class="top"><span class="icon">🦊</span><span class="pill soon">Service link</span></div>
+        <div><h3>Firefox</h3><p>Firefox Kasm image service slot.</p><div class="launch">Open Firefox service →</div></div>
+      </a>
+      <a class="card" href="https://discord-browserunblocked.onrender.com">
+        <div class="top"><span class="icon">💬</span><span class="pill soon">Service link</span></div>
+        <div><h3>Discord</h3><p>Discord desktop app streamed through Kasm.</p><div class="launch">Open Discord service →</div></div>
+      </a>
+      <a class="card" href="https://brave-browserunblocked.onrender.com">
+        <div class="top"><span class="icon">🦁</span><span class="pill soon">Service link</span></div>
+        <div><h3>Brave</h3><p>Brave browser Kasm image service slot.</p><div class="launch">Open Brave service →</div></div>
+      </a>
+      <a class="card" href="https://edge-browserunblocked.onrender.com">
+        <div class="top"><span class="icon">🌀</span><span class="pill soon">Service link</span></div>
+        <div><h3>Edge</h3><p>Microsoft Edge Kasm image service slot.</p><div class="launch">Open Edge service →</div></div>
+      </a>
+      <a class="card" href="https://desktop-browserunblocked.onrender.com">
+        <div class="top"><span class="icon">🖥️</span><span class="pill soon">Service link</span></div>
+        <div><h3>Desktop</h3><p>General Kasm Linux desktop workspace.</p><div class="launch">Open Desktop service →</div></div>
+      </a>
+      <a class="card" href="https://terminal-browserunblocked.onrender.com">
+        <div class="top"><span class="icon">⌨️</span><span class="pill soon">Service link</span></div>
+        <div><h3>Terminal</h3><p>Terminal app service slot for quick shell access.</p><div class="launch">Open Terminal service →</div></div>
+      </a>
+    </section>
+    <footer>Tip: duplicate this Render service for each app card and change the base Kasm image for that service.</footer>
+  </main>
+</body>
+</html>
