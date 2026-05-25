@@ -7,6 +7,25 @@ mkdir -p /tmp/browserunblocked-nginx /app/storage /app/storage/profiles /app/sto
 chmod -R 777 /app/storage || true
 printf '# BrowserUnblocked dynamic session routes live here\n' > /tmp/browserunblocked-nginx/placeholder.conf
 
+# Patch controller at boot so private Kasm sessions use the stable nginx route:
+# /p/<internal-port>/<route>/... instead of dynamic /s/<route>/... includes.
+python3 - <<'PY'
+path = '/control_server.py'
+try:
+    s = open(path, 'r', encoding='utf-8').read()
+    s = s.replace("MAX_SESSIONS=int(os.environ.get('MAX_ACTIVE_SESSIONS','3'))", "MAX_SESSIONS=int(os.environ.get('MAX_ACTIVE_SESSIONS','8'))")
+    old = "def viewer(route): return '/s/%s/vnc.html?resize=scale&reconnect=1&autoconnect=1&path=s/%s/websockify'%(route,route)"
+    new = "def viewer(route, web_port=None):\n if web_port is None: return '/s/%s/vnc.html?resize=scale&reconnect=1&autoconnect=1&path=s/%s/websockify'%(route,route)\n return '/p/%s/%s/vnc.html?resize=scale&reconnect=1&autoconnect=1&path=p/%s/%s/websockify'%(web_port,route,web_port,route)"
+    s = s.replace(old, new)
+    s = s.replace("viewer(s['route']) if s", "viewer(s['route'],s['web_port']) if s")
+    s = s.replace("viewer(s['route']) if s else", "viewer(s['route'],s['web_port']) if s else")
+    s = s.replace("viewer(s['route']),app", "viewer(s['route'],s['web_port']),app")
+    open(path, 'w', encoding='utf-8').write(s)
+    print('Patched control_server.py for stable /p/<port>/<route> viewer URLs')
+except Exception as exc:
+    print('Controller patch skipped:', exc)
+PY
+
 # The SQLite DB lives on the persistent disk, so rows from old deploys/restarts
 # can survive even though the old KasmVNC processes are gone. Clear runtime-only
 # session rows on boot so stale PIDs do not make new users get 503 errors.
