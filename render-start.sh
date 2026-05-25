@@ -7,6 +7,16 @@ mkdir -p /tmp/browserunblocked-nginx /app/storage /app/storage/profiles /app/sto
 chmod -R 777 /app/storage || true
 printf '# BrowserUnblocked dynamic session routes live here\n' > /tmp/browserunblocked-nginx/placeholder.conf
 
+# Optional: set KASM_BASIC_AUTH_B64 in Render to the base64 of your internal KasmVNC username:password.
+# This lets nginx answer KasmVNC's upstream Basic auth challenge internally, so users do not see a browser popup.
+if [ -n "${KASM_BASIC_AUTH_B64:-}" ]; then
+  sed -i "s#__KASM_BASIC_AUTH__#${KASM_BASIC_AUTH_B64}#g" /etc/nginx/conf.d/default.conf
+  echo "Configured nginx with internal KasmVNC auth header"
+else
+  sed -i '/__KASM_BASIC_AUTH__/d' /etc/nginx/conf.d/default.conf
+  echo "KASM_BASIC_AUTH_B64 not set; nginx will not inject KasmVNC auth"
+fi
+
 # Patch controller at boot so private Kasm sessions use the stable nginx route:
 # /p/<internal-port>/<route>/... instead of dynamic /s/<route>/... includes.
 python3 - <<'PY'
