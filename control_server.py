@@ -41,7 +41,7 @@ def lock(u,app):
  now=int(time.time())
  with db() as c:
   r=c.execute('select * from lock where id=1').fetchone()
-  if r and now-int(r['seen'])<1800 and int(r['uid'])!=int(u['id']): return False,'Workspace busy. %s is using it.'%r['name']
+  if r and now-int(r['seen'])<30 and int(r['uid'])!=int(u['id']): return False,'Workspace busy. %s is using it.'%r['name']
   c.execute('insert or replace into lock values(1,?,?,?,?)',(u['id'],u['name'],app,now)); return True,''
 def chrome(uid,app,url,mode):
  p=prof(uid,app); flag='--new-window ' if mode=='window' else '--app='
