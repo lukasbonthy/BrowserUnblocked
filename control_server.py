@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sqlite3, secrets, hashlib, html, json, subprocess, shlex, time, re, signal
+import os, sqlite3, secrets, hashlib, html, json, subprocess, shlex, time, re, signal, socket
 from http import cookies
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse, quote
@@ -12,10 +12,8 @@ HOMES=os.path.join(STORE,'homes')
 NGINX_DIR='/tmp/browserunblocked-nginx'
 MAX_SESSIONS=int(os.environ.get('MAX_ACTIVE_SESSIONS','2'))
 BASE_DISPLAY=int(os.environ.get('BASE_DISPLAY','30'))
-BASE_WEB_PORT=int(os.environ.get('BASE_WEB_PORT','7300'))
 BASE_VNC_PORT=int(os.environ.get('BASE_VNC_PORT','5900'))
 RES=os.environ.get('VNC_RESOLUTION','854x480')
-KASM_PASS_FILE=os.environ.get('KASM_PASS_FILE','/home/kasm-user/.kasmpasswd')
 for d in (STORE,PROFILES,HOMES,NGINX_DIR): os.makedirs(d,exist_ok=True)
 
 def sq(x): return shlex.quote(str(x))
@@ -47,6 +45,10 @@ def alive(pid):
   if not pid: return False
   os.kill(int(pid),0); return True
  except Exception: return False
+def tcp_open(port):
+ try:
+  s=socket.create_connection(('127.0.0.1',int(port)),timeout=.25); s.close(); return True
+ except Exception: return False
 def active_count():
  with db() as c: rows=c.execute('select pid from sessions').fetchall()
  return sum(1 for r in rows if alive(r['pid']))
@@ -54,6 +56,10 @@ def profile(uid,app):
  p=os.path.join(PROFILES,str(uid),sid(app)); os.makedirs(p,exist_ok=True); os.chmod(p,0o777); return p
 def home(uid):
  h=os.path.join(HOMES,str(uid)); os.makedirs(os.path.join(h,'.vnc'),exist_ok=True); os.chmod(h,0o777); os.chmod(os.path.join(h,'.vnc'),0o777); return h
+def web_port_for_display(display):
+ # KasmVNC docs say network.websocket_port:auto becomes 8443 + X display number.
+ # Direct vncserver launches were listening on that default, not on our old 730x ports.
+ return 8443 + int(display)
 def route_conf(route,port): return os.path.join(NGINX_DIR,'session_%s.conf'%route)
 def viewer(route, web_port=None):
  if web_port is None: return '/s/%s/vnc.html?resize=scale&reconnect=1&autoconnect=1&path=s/%s/websockify'%(route,route)
@@ -63,7 +69,7 @@ def app_url(app):
 def label(app): return {'chromium':'Chromium','chrome':'Chrome','firefox':'Firefox','discord':'Discord','brave':'Brave','edge':'Edge','desktop':'Desktop','terminal':'Terminal'}.get(app,app.title())
 def write_kasm_config(uid,web_port):
  h=home(uid); w,hgt=(RES.split('x')+['480'])[:2]
- cfg=f'''desktop:\n  resolution:\n    width: {w}\n    height: {hgt}\n  allow_resize: false\n  pixel_depth: 16\nnetwork:\n  protocol: http\n  interface: 0.0.0.0\n  websocket_port: {web_port}\n  use_ipv4: true\n  use_ipv6: false\n  ssl:\n    require_ssl: true\nuser_session:\n  session_type: shared\n  new_session_disconnects_existing_exclusive_session: false\n  concurrent_connections_prompt: false\n  idle_timeout: never\npointer:\n  enabled: true\nruntime_configuration:\n  allow_client_to_override_kasm_server_settings: true\n  allow_override_standard_vnc_server_settings: true\nlogging:\n  log_writer_name: all\n  log_dest: logfile\n  level: 30\nsecurity:\n  brute_force_protection:\n    blacklist_threshold: 0\n    blacklist_timeout: 1\ndata_loss_prevention:\n  visible_region:\n    concealed_region:\n      allow_click_down: true\n      allow_click_release: true\n  clipboard:\n    delay_between_operations: none\n    server_to_client:\n      enabled: true\n      size: unlimited\n    client_to_server:\n      enabled: true\n      size: unlimited\n  keyboard:\n    enabled: true\n    rate_limit: unlimited\n  logging:\n    level: info\nencoding:\n  max_frame_rate: 10\n  full_frame_updates: none\n  rect_encoding_mode:\n    min_quality: 2\n    max_quality: 3\n    rectangle_compress_threads: auto\n  video_encoding_mode:\n    jpeg_quality: 2\n    webp_quality: 2\n    max_resolution:\n      width: {w}\n      height: {hgt}\n    enter_video_encoding_mode:\n      time_threshold: 2\n      area_threshold: 55%\n    exit_video_encoding_mode:\n      time_threshold: 1\n    logging:\n      level: off\n  compare_framebuffer: auto\n  zrle_zlib_level: 1\n  hextile_improved_compression: false\nserver:\n  advanced:\n    kasm_password_file: {KASM_PASS_FILE}\n    x_authority_file: auto\n  auto_shutdown:\n    no_user_session_timeout: never\n    active_user_session_timeout: never\n    inactive_user_session_timeout: never\ncommand_line:\n  prompt: false\nkeyboard:\n  remap_keys:\n'''
+ cfg=f'''desktop:\n  resolution:\n    width: {w}\n    height: {hgt}\n  allow_resize: false\n  pixel_depth: 16\nnetwork:\n  protocol: http\n  interface: 0.0.0.0\n  websocket_port: auto\n  use_ipv4: true\n  use_ipv6: false\n  ssl:\n    require_ssl: true\nuser_session:\n  session_type: shared\n  new_session_disconnects_existing_exclusive_session: false\n  concurrent_connections_prompt: false\n  idle_timeout: never\npointer:\n  enabled: true\nruntime_configuration:\n  allow_client_to_override_kasm_server_settings: true\n  allow_override_standard_vnc_server_settings: true\nlogging:\n  log_writer_name: all\n  log_dest: logfile\n  level: 30\nsecurity:\n  brute_force_protection:\n    blacklist_threshold: 0\n    blacklist_timeout: 1\ndata_loss_prevention:\n  visible_region:\n    concealed_region:\n      allow_click_down: true\n      allow_click_release: true\n  clipboard:\n    delay_between_operations: none\n    server_to_client:\n      enabled: true\n      size: unlimited\n    client_to_server:\n      enabled: true\n      size: unlimited\n  keyboard:\n    enabled: true\n    rate_limit: unlimited\n  logging:\n    level: info\nencoding:\n  max_frame_rate: 10\n  full_frame_updates: none\n  rect_encoding_mode:\n    min_quality: 2\n    max_quality: 3\n    rectangle_compress_threads: auto\n  video_encoding_mode:\n    jpeg_quality: 2\n    webp_quality: 2\n    max_resolution:\n      width: {w}\n      height: {hgt}\n    enter_video_encoding_mode:\n      time_threshold: 2\n      area_threshold: 55%\n    exit_video_encoding_mode:\n      time_threshold: 1\n    logging:\n      level: off\n  compare_framebuffer: auto\n  zrle_zlib_level: 1\n  hextile_improved_compression: false\nserver:\n  advanced:\n    kasm_password_file: /home/kasm-user/.kasmpasswd\n    x_authority_file: auto\n  auto_shutdown:\n    no_user_session_timeout: never\n    active_user_session_timeout: never\n    inactive_user_session_timeout: never\ncommand_line:\n  prompt: false\nkeyboard:\n  remap_keys:\n'''
  open(os.path.join(h,'.vnc','kasmvnc.yaml'),'w').write(cfg)
 def write_xstartup(uid):
  h=home(uid)
@@ -107,7 +113,7 @@ def ensure_session(u,app):
  used=active_count()
  if used>=MAX_SESSIONS: raise RuntimeError('Session capacity full: %s/%s active. Click End session on old accounts or raise MAX_ACTIVE_SESSIONS.'%(used,MAX_SESSIONS))
  route=s['route'] if s else secrets.token_urlsafe(8).replace('-','').replace('_','')
- display=BASE_DISPLAY+uid; web_port=BASE_WEB_PORT+uid; vnc_port=BASE_VNC_PORT+uid
+ display=BASE_DISPLAY+uid; web_port=web_port_for_display(display); vnc_port=BASE_VNC_PORT+uid
  pid=start_kasm(uid,app,display,web_port,vnc_port)
  with db() as c: c.execute('insert or replace into sessions(uid,route,display,web_port,vnc_port,pid,app,created,seen) values(?,?,?,?,?,?,?,?,?)',(uid,route,display,web_port,vnc_port,pid,app,now,now))
  return {'uid':uid,'route':route,'display':display,'web_port':web_port,'vnc_port':vnc_port,'pid':pid,'app':app,'created':now,'seen':now}
@@ -123,9 +129,10 @@ def stop_session(uid):
   with db() as c: c.execute('delete from sessions where uid=?',(uid,))
   subprocess.run(['nginx','-s','reload'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 def ready(uid,app):
- s=get_session(uid); ok=bool(s and alive(s['pid'])); sock=False
- if s: sock=os.path.exists('/tmp/.X11-unix/X%s'%s['display'])
- return {'ok':True,'socketReady':sock,'appReady':ok,'ready':sock and ok,'viewer':viewer(s['route'],s['web_port']) if s else '/dashboard'}
+ s=get_session(uid); ok=bool(s and alive(s['pid'])); sock=False; port=False
+ if s:
+  sock=os.path.exists('/tmp/.X11-unix/X%s'%s['display']); port=tcp_open(s['web_port'])
+ return {'ok':True,'socketReady':sock,'portReady':port,'appReady':ok,'ready':sock and port and ok,'viewer':viewer(s['route'],s['web_port']) if s else '/dashboard'}
 def page(title,body,u=None):
  nav='<a href=/signup>Sign up</a>' if not u else '<a href=/dashboard>Dashboard</a> <a href=/release>End session</a> <a href=/logout>Logout</a> @'+html.escape(u['name'])
  css='body{font-family:system-ui;background:#070b16;color:white;margin:0}.w{max-width:1100px;margin:auto;padding:28px}a,.btn,button{color:white;background:#4267ff;border:0;border-radius:999px;padding:10px 14px;text-decoration:none;font-weight:800}.card,.app{border:1px solid #ffffff25;background:#ffffff12;border-radius:24px;padding:22px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.app{display:block;background:#ffffff10}input{padding:12px;border-radius:14px;width:100%;box-sizing:border-box;margin:10px 0;background:#0005;color:white;border:1px solid #ffffff33}.err{background:#ff555533;border-radius:14px;padding:10px}@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:520px){.grid{grid-template-columns:1fr}}'
@@ -171,7 +178,7 @@ class H(BaseHTTPRequestHandler):
    try: s=ensure_session(u,app)
    except Exception as e: self.sendh(503,page('Busy','<section class=card><p class=err>%s</p></section>'%html.escape(str(e)),u)); return
    print('control_server: direct private session %s for %s on port %s app %s'%(s['route'],u['name'],s['web_port'],app),flush=True)
-   self.sendh(200,page('Opening','<section class=card><h1>Opening %s</h1><p>Starting your direct private KasmVNC session and launching the app...</p><p><a class=btn href="%s">Open now</a></p></section><script>let t=0;async function c(){t++;let r=await fetch("/api/ready/%s");let d=await r.json();if(d.ready||t>70)location.href=d.viewer;else setTimeout(c,1000)}c()</script>'%(html.escape(label(app)),viewer(s['route'],s['web_port']),app),u)); return
+   self.sendh(200,page('Opening','<section class=card><h1>Opening %s</h1><p>Starting your direct private KasmVNC session and launching the app...</p><p><a class=btn href="%s">Open now</a></p></section><script>let t=0;async function c(){t++;let r=await fetch("/api/ready/%s");let d=await r.json();if(d.ready||t>120)location.href=d.viewer;else setTimeout(c,1000)}c()</script>'%(html.escape(label(app)),viewer(s['route'],s['web_port']),app),u)); return
   self.sendh(404,page('404','<section class=card><h1>Not found</h1></section>',u))
  def do_POST(self):
   if (urlparse(self.path).path.rstrip('/') or '/')!='/signup': self.sendh(404,page('404','not found')); return
