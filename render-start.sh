@@ -20,7 +20,7 @@ else
   echo "KASM_BASIC_AUTH_B64 not set; nginx will not inject KasmVNC auth"
 fi
 
-# Patch controller at boot so private Kasm sessions use the stable nginx route and lower-load settings.
+# Patch controller at boot so private Kasm sessions use the stable nginx route and safer click/input settings.
 python3 - <<'PY'
 path = '/control_server.py'
 try:
@@ -42,12 +42,19 @@ try:
     s = s.replace('webp_quality: 4', 'webp_quality: 2')
     s = s.replace('area_threshold: 35%', 'area_threshold: 55%')
 
+    # Mouse-click freeze fix: force pointer input on and allow click down/release through KasmVNC DLP.
+    # Without this, a bad visible-region/client-state interaction can make click-down or click-release feel frozen.
+    s = s.replace(
+        'pointer:\\n  enabled: true\\nruntime_configuration:',
+        'pointer:\\n  enabled: true\\ndata_loss_prevention:\\n  visible_region:\\n    concealed_region:\\n      allow_click_down: true\\n      allow_click_release: true\\n  keyboard:\\n    enabled: true\\n    rate_limit: unlimited\\n  logging:\\n    level: info\\nruntime_configuration:'
+    )
+
     # Add low-resource Chromium flags anywhere the controller launches Chromium.
     extra = ' --disable-extensions --disable-component-update --disable-renderer-backgrounding --disable-background-timer-throttling --disable-ipc-flooding-protection --disable-features=TranslateUI,MediaRouter,AutofillServerCommunication,OptimizationHints,InterestFeedContentSuggestions,HeavyAdIntervention --disable-site-isolation-trials'
     s = s.replace('--disable-background-networking --mute-audio --window-size=', '--disable-background-networking --mute-audio' + extra + ' --window-size=')
 
     open(path, 'w', encoding='utf-8').write(s)
-    print('Patched control_server.py for stable /p viewer URLs and lower-load VNC/Chromium settings')
+    print('Patched control_server.py for stable /p viewer URLs, lower-load VNC, and click-safe DLP settings')
 except Exception as exc:
     print('Controller patch skipped:', exc)
 PY
