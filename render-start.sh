@@ -34,6 +34,10 @@ try:
     s = s.replace("viewer(s['route']) if s else", "viewer(s['route'],s['web_port']) if s else")
     s = s.replace("viewer(s['route']),app", "viewer(s['route'],s['web_port']),app")
 
+    # Direct sessions are behind nginx. Public HTTPS is already terminated by Render/Cloudflare,
+    # so the private KasmVNC hop should be plain HTTP to avoid TLS/backend mismatch loops.
+    s = s.replace('require_ssl: true', 'require_ssl: false')
+
     # Lower KasmVNC encoder cost so clicks do not spike CPU hard enough to kill sessions.
     s = s.replace('max_frame_rate: 18', 'max_frame_rate: 10')
     s = s.replace('min_quality: 3', 'min_quality: 2')
@@ -54,7 +58,7 @@ try:
     s = s.replace('--disable-background-networking --mute-audio --window-size=', '--disable-background-networking --mute-audio' + extra + ' --window-size=')
 
     open(path, 'w', encoding='utf-8').write(s)
-    print('Patched control_server.py for stable /p viewer URLs, lower-load VNC, and click-safe DLP settings')
+    print('Patched control_server.py for stable /p viewer URLs, plain internal VNC HTTP, lower-load VNC, and click-safe DLP settings')
 except Exception as exc:
     print('Controller patch skipped:', exc)
 PY
