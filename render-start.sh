@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
-export MAX_ACTIVE_SESSIONS="${MAX_ACTIVE_SESSIONS:-8}"
+# Conservative defaults. A full KasmVNC + Chromium desktop per user is heavy,
+# so start with 2 stable concurrent sessions and let the owner raise it later.
+export MAX_ACTIVE_SESSIONS="${MAX_ACTIVE_SESSIONS:-2}"
+export VNC_RESOLUTION="${VNC_RESOLUTION:-854x480}"
 
 mkdir -p /tmp/browserunblocked-nginx /app/storage /app/storage/profiles /app/storage/homes
 chmod -R 777 /app/storage || true
@@ -17,21 +20,34 @@ else
   echo "KASM_BASIC_AUTH_B64 not set; nginx will not inject KasmVNC auth"
 fi
 
-# Patch controller at boot so private Kasm sessions use the stable nginx route:
-# /p/<internal-port>/<route>/... instead of dynamic /s/<route>/... includes.
+# Patch controller at boot so private Kasm sessions use the stable nginx route and lower-load settings.
 python3 - <<'PY'
 path = '/control_server.py'
 try:
     s = open(path, 'r', encoding='utf-8').read()
-    s = s.replace("MAX_SESSIONS=int(os.environ.get('MAX_ACTIVE_SESSIONS','3'))", "MAX_SESSIONS=int(os.environ.get('MAX_ACTIVE_SESSIONS','8'))")
+    s = s.replace("MAX_SESSIONS=int(os.environ.get('MAX_ACTIVE_SESSIONS','3'))", "MAX_SESSIONS=int(os.environ.get('MAX_ACTIVE_SESSIONS','2'))")
+    s = s.replace("MAX_SESSIONS=int(os.environ.get('MAX_ACTIVE_SESSIONS','8'))", "MAX_SESSIONS=int(os.environ.get('MAX_ACTIVE_SESSIONS','2'))")
     old = "def viewer(route): return '/s/%s/vnc.html?resize=scale&reconnect=1&autoconnect=1&path=s/%s/websockify'%(route,route)"
     new = "def viewer(route, web_port=None):\n if web_port is None: return '/s/%s/vnc.html?resize=scale&reconnect=1&autoconnect=1&path=s/%s/websockify'%(route,route)\n return '/p/%s/%s/vnc.html?resize=scale&reconnect=1&autoconnect=1&path=p/%s/%s/websockify'%(web_port,route,web_port,route)"
     s = s.replace(old, new)
     s = s.replace("viewer(s['route']) if s", "viewer(s['route'],s['web_port']) if s")
     s = s.replace("viewer(s['route']) if s else", "viewer(s['route'],s['web_port']) if s else")
     s = s.replace("viewer(s['route']),app", "viewer(s['route'],s['web_port']),app")
+
+    # Lower KasmVNC encoder cost so clicks do not spike CPU hard enough to kill sessions.
+    s = s.replace('max_frame_rate: 18', 'max_frame_rate: 10')
+    s = s.replace('min_quality: 3', 'min_quality: 2')
+    s = s.replace('max_quality: 5', 'max_quality: 3')
+    s = s.replace('jpeg_quality: 4', 'jpeg_quality: 2')
+    s = s.replace('webp_quality: 4', 'webp_quality: 2')
+    s = s.replace('area_threshold: 35%', 'area_threshold: 55%')
+
+    # Add low-resource Chromium flags anywhere the controller launches Chromium.
+    extra = ' --disable-extensions --disable-component-update --disable-renderer-backgrounding --disable-background-timer-throttling --disable-ipc-flooding-protection --disable-features=TranslateUI,MediaRouter,AutofillServerCommunication,OptimizationHints,InterestFeedContentSuggestions,HeavyAdIntervention --disable-site-isolation-trials'
+    s = s.replace('--disable-background-networking --mute-audio --window-size=', '--disable-background-networking --mute-audio' + extra + ' --window-size=')
+
     open(path, 'w', encoding='utf-8').write(s)
-    print('Patched control_server.py for stable /p/<port>/<route> viewer URLs')
+    print('Patched control_server.py for stable /p viewer URLs and lower-load VNC/Chromium settings')
 except Exception as exc:
     print('Controller patch skipped:', exc)
 PY
@@ -56,6 +72,7 @@ PY
 
 echo "Starting BrowserUnblocked session controller on 127.0.0.1:${CONTROL_PORT:-7070}"
 echo "MAX_ACTIVE_SESSIONS=${MAX_ACTIVE_SESSIONS}"
+echo "VNC_RESOLUTION=${VNC_RESOLUTION}"
 python3 /control_server.py &
 
 echo "Starting nginx proxy on port ${PORT:-10000}"
